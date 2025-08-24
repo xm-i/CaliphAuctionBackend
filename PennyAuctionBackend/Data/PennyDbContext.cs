@@ -14,6 +14,21 @@ public class PennyDbContext(DbContextOptions<PennyDbContext> options) : DbContex
 		set;
 	}
 
+	public required DbSet<AuctionItem> AuctionItems {
+		get;
+		set;
+	}
+
+	public required DbSet<Bid> Bids {
+		get;
+		set;
+	}
+
+	public required DbSet<AuctionItemCategory> AuctionItemCategories {
+		get;
+		set;
+	}
+
 	public override int SaveChanges() {
 		this.UpdateTimestamps();
 		return base.SaveChanges();
