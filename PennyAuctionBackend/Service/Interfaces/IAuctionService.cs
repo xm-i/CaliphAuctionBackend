@@ -4,4 +4,5 @@ namespace PennyAuctionBackend.Service.Interfaces;
 
 public interface IAuctionService {
 	public Task<SearchAuctionItemsResponse> SearchAsync(int categoryId);
+	public Task<AuctionItemDetailDto> GetDetailAsync(int id);
 }
