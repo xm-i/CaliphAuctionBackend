@@ -29,6 +29,11 @@ public class PennyDbContext(DbContextOptions<PennyDbContext> options) : DbContex
 		set;
 	}
 
+	public required DbSet<Product> Products {
+		get;
+		set;
+	}
+
 	public override int SaveChanges() {
 		this.UpdateTimestamps();
 		return base.SaveChanges();

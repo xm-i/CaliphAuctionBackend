@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using PennyAuctionBackend.Data;
 using PennyAuctionBackend.Hubs;
+using PennyAuctionBackend.Services.Background;
 using PennyAuctionBackend.Utils.Attributes;
 
 namespace PennyAuctionBackend;
@@ -37,6 +38,9 @@ public static class Program {
 			options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")!));
 
 		RegisterServices(builder.Services);
+
+		builder.Services.Configure<AuctionOptions>(builder.Configuration.GetSection("Auction"));
+		builder.Services.AddHostedService<AuctionTopUpService>();
 
 		var jwtKey = builder.Configuration["Jwt:Key"];
 		var jwtIssuer = builder.Configuration["Jwt:Issuer"];

@@ -4,21 +4,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace PennyAuctionBackend.Models;
 
-public class AuctionItem : BaseEntity {
+[Index(nameof(IsActive))]
+[Index(nameof(CategoryId))]
+public class Product : BaseEntity {
 	[Key]
 	public int Id {
-		get;
-		set;
-	}
-
-	public int? ProductId {
-		get;
-		set;
-	}
-
-	[ForeignKey(nameof(ProductId))]
-	[DeleteBehavior(DeleteBehavior.Restrict)]
-	public Product? Product {
 		get;
 		set;
 	}
@@ -58,18 +48,6 @@ public class AuctionItem : BaseEntity {
 	}
 
 	[Required]
-	public long StartingBid {
-		get;
-		set;
-	}
-
-	[Required]
-	public long CurrentPrice {
-		get;
-		set;
-	}
-
-	[Required]
 	public int CategoryId {
 		get;
 		set;
@@ -82,38 +60,26 @@ public class AuctionItem : BaseEntity {
 		set;
 	}
 
-	public int? CurrentHighestBidUserId {
-		get;
-		set;
-	}
-
-	[ForeignKey(nameof(CurrentHighestBidUserId))]
-	[DeleteBehavior(DeleteBehavior.Restrict)]
-	public User? CurrentHighestBidUser {
+	[Required]
+	public int StockQuantity {
 		get;
 		set;
 	}
 
 	[Required]
-	public DateTime EndTime {
+	public bool IsActive {
 		get;
 		set;
-	}
+	} = true;
 
 	[Required]
-	public AuctionStatus Status {
+	public int DurationMinutes {
 		get;
 		set;
-	}
+	} = 30;
 
-	public ICollection<Bid> Bids {
+	public ICollection<AuctionItem> AuctionItems {
 		get;
 		set;
 	} = [];
-}
-
-public enum AuctionStatus {
-	Preparing,
-	Active,
-	Ended
 }
