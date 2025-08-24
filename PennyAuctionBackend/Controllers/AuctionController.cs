@@ -13,7 +13,7 @@ public class AuctionController(IAuctionService auctionService) : ControllerBase 
 
 	[HttpGet("search")]
 	[AllowAnonymous]
-	public async Task<ActionResult<SearchAuctionItemsResponse>> SearchAsync([FromQuery] int categoryId) {
+	public async Task<ActionResult<SearchAuctionItemsResponse>> SearchAsync([FromQuery] int? categoryId) {
 		var result = await this._auctionService.SearchAsync(categoryId);
 		return this.Ok(result);
 	}

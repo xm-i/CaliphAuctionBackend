@@ -19,10 +19,14 @@ public class AuctionService(PennyDbContext dbContext, IConfiguration configurati
 	private readonly PennyDbContext _db = dbContext;
 
 	/// <inheritdoc />
-	public async Task<SearchAuctionItemsResponse> SearchAsync(int categoryId) {
+	public async Task<SearchAuctionItemsResponse> SearchAsync(int? categoryId) {
 		var baseQuery = this._db.AuctionItems
 			.AsNoTracking()
-			.Where(x => x.CategoryId == categoryId && x.Status == AuctionStatus.Active);
+			.Where(x => x.Status == AuctionStatus.Active);
+
+		if (categoryId is { } cid) {
+			baseQuery = baseQuery.Where(x => x.CategoryId == cid);
+		}
 
 		var total = await baseQuery.CountAsync();
 
