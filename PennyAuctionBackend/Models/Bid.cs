@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace PennyAuctionBackend.Models;
 
+[Index(nameof(AuctionItemId), nameof(BidAmount), IsUnique = true)]
 public class Bid : BaseEntity {
 	[Key]
 	public int Id {
@@ -32,10 +33,10 @@ public class Bid : BaseEntity {
 
 	[ForeignKey(nameof(UserId))]
 	[DeleteBehavior(DeleteBehavior.Restrict)]
-	public required User User {
+	public User User {
 		get;
 		set;
-	}
+	} = null!;
 
 	[Required]
 	public int BidAmount {

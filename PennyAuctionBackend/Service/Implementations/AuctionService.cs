@@ -14,7 +14,8 @@ namespace PennyAuctionBackend.Service.Implementations;
 ///     カテゴリ別のアイテム検索など、クエリ機能を提供します。
 /// </summary>
 [AddScoped]
-public class AuctionService(PennyDbContext dbContext) : IAuctionService {
+public class AuctionService(PennyDbContext dbContext, IConfiguration configuration) : IAuctionService {
+	private readonly IConfiguration _configuration = configuration;
 	private readonly PennyDbContext _db = dbContext;
 
 	/// <inheritdoc />
@@ -81,5 +82,54 @@ public class AuctionService(PennyDbContext dbContext) : IAuctionService {
 		}
 
 		return item;
+	}
+
+	/// <summary>
+	///     入札を行う。
+	/// </summary>
+	/// <param name="userId">入札ユーザー ID</param>
+	/// <param name="request">入札情報</param>
+	public async Task PlaceBidAsync(int userId, PlaceBidRequest request) {
+		await using var transaction = await this._db.Database.BeginTransactionAsync();
+
+		var item = await this._db.AuctionItems
+			.Include(x => x.Bids)
+			.FirstOrDefaultAsync(x => x.Id == request.AuctionItemId);
+
+		if (item is null) {
+			throw new ValidationPennyException("Auction item not found.");
+		}
+
+		if (item.Status != AuctionStatus.Active) {
+			throw new ValidationPennyException("Auction is not active.");
+		}
+
+		var userExists = await this._db.Users.AnyAsync(u => u.Id == userId);
+		if (!userExists) {
+			throw new ValidationPennyException("User not found.");
+		}
+
+		this._db.Bids.Add(new() {
+			AuctionItemId = item.Id,
+			AuctionItem = item,
+			UserId = userId,
+			BidAmount = request.BidAmount,
+			BidTime = DateTime.UtcNow
+		});
+
+		var nullableMinimumEndTimeSeconds = this._configuration.GetValue<int?>("Auction:MinimumEndTimeSeconds", null);
+		if (nullableMinimumEndTimeSeconds is not { } minimumEndTimeSeconds) {
+			throw new ConfigurationPennyException("Auction:MinimumEndTimeSeconds configuration is missing.");
+		}
+
+		var minimumEndTime = DateTime.UtcNow.AddSeconds(minimumEndTimeSeconds);
+		item.CurrentPrice = request.BidAmount;
+		item.CurrentHighestBidUserId = userId;
+		if (item.EndTime < minimumEndTime) {
+			item.EndTime = minimumEndTime;
+		}
+
+		await this._db.SaveChangesAsync();
+		await transaction.CommitAsync();
 	}
 }

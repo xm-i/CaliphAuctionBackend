@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PennyAuctionBackend.Dtos.AuctionItem;
@@ -22,5 +23,17 @@ public class AuctionController(IAuctionService auctionService) : ControllerBase 
 	public async Task<ActionResult<AuctionItemDetailDto>> GetDetailAsync([FromRoute] int id) {
 		var dto = await this._auctionService.GetDetailAsync(id);
 		return this.Ok(dto);
+	}
+
+	[HttpPost("place-bid")]
+	[Authorize]
+	public async Task<IActionResult> PlaceBidAsync([FromBody] PlaceBidRequest request) {
+		var userIdClaim = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+		if (!int.TryParse(userIdClaim, out var userId)) {
+			return this.Unauthorized();
+		}
+
+		await this._auctionService.PlaceBidAsync(userId, request);
+		return this.NoContent();
 	}
 }
