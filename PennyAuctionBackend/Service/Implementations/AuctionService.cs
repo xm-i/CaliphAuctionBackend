@@ -71,6 +71,7 @@ public class AuctionService(PennyDbContext dbContext, IConfiguration configurati
 				EndTime = x.EndTime,
 				CategoryId = x.CategoryId,
 				CategoryName = x.Category.Name,
+				CurrentHighestBidUserId = x.CurrentHighestBidUserId,
 				CurrentHighestBidUserName = x.CurrentHighestBidUser != null ? x.CurrentHighestBidUser.Username : null,
 				BidCount = x.Bids.Count,
 				Status = (int)x.Status,
@@ -106,6 +107,17 @@ public class AuctionService(PennyDbContext dbContext, IConfiguration configurati
 
 		if (item.Status != AuctionStatus.Active) {
 			throw new ValidationPennyException("Auction is not active.");
+		}
+
+		// すでに現在の最高入札者が自分の場合、入札不可
+		if (item.CurrentHighestBidUserId.HasValue && item.CurrentHighestBidUserId.Value == userId) {
+			throw new ValidationPennyException("You are already the highest bidder.");
+		}
+
+		// 入札価格の上限は現在価格よりも10%（切り上げ）以下
+		var maxAllowed = (long)decimal.Ceiling(item.CurrentPrice * 1.1m);
+		if (request.BidAmount > maxAllowed) {
+			throw new ValidationPennyException("Bid amount exceeds the maximum allowed limit.");
 		}
 
 		var userExists = await this._db.Users.AnyAsync(u => u.Id == userId);
