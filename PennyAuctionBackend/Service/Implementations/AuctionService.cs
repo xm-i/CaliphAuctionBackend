@@ -1,8 +1,11 @@
 using System.Net;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using PennyAuctionBackend.Data;
 using PennyAuctionBackend.Dtos.AuctionItem;
+using PennyAuctionBackend.Dtos.Realtime;
 using PennyAuctionBackend.Exceptions;
+using PennyAuctionBackend.Hubs;
 using PennyAuctionBackend.Models;
 using PennyAuctionBackend.Service.Interfaces;
 using PennyAuctionBackend.Utils.Attributes;
@@ -14,9 +17,10 @@ namespace PennyAuctionBackend.Service.Implementations;
 ///     カテゴリ別のアイテム検索など、クエリ機能を提供します。
 /// </summary>
 [AddScoped]
-public class AuctionService(PennyDbContext dbContext, IConfiguration configuration) : IAuctionService {
+public class AuctionService(PennyDbContext dbContext, IConfiguration configuration, IHubContext<AuctionHub, IAuctionClient> hubContext) : IAuctionService {
 	private readonly IConfiguration _configuration = configuration;
 	private readonly PennyDbContext _db = dbContext;
+	private readonly IHubContext<AuctionHub, IAuctionClient> _hub = hubContext;
 
 	/// <inheritdoc />
 	public async Task<SearchAuctionItemsResponse> SearchAsync(int? categoryId) {
@@ -125,13 +129,14 @@ public class AuctionService(PennyDbContext dbContext, IConfiguration configurati
 			throw new ValidationPennyException("User not found.");
 		}
 
-		this._db.Bids.Add(new() {
+		var bid = new Bid {
 			AuctionItemId = item.Id,
 			AuctionItem = item,
 			UserId = userId,
 			BidAmount = request.BidAmount,
 			BidTime = DateTime.UtcNow
-		});
+		};
+		this._db.Bids.Add(bid);
 
 		var nullableMinimumEndTimeSeconds = this._configuration.GetValue<int?>("Auction:MinimumEndTimeSeconds", null);
 		if (nullableMinimumEndTimeSeconds is not { } minimumEndTimeSeconds) {
@@ -145,7 +150,24 @@ public class AuctionService(PennyDbContext dbContext, IConfiguration configurati
 			item.EndTime = minimumEndTime;
 		}
 
+		var username = await this._db.Users
+			.Where(u => u.Id == userId)
+			.Select(u => u.Username)
+			.FirstAsync();
+
 		await this._db.SaveChangesAsync();
 		await transaction.CommitAsync();
+
+		var update = new BidUpdateDto {
+			AuctionItemId = item.Id,
+			CurrentPrice = item.CurrentPrice,
+			EndTime = item.EndTime,
+			BidId = bid.Id,
+			BidTime = bid.BidTime,
+			CurrentHighestBidUserId = userId,
+			CurrentHighestBidUserName = username
+		};
+
+		await this._hub.Clients.Group(AuctionHub.BuildGroupName(item.Id)).ReceiveBidUpdate(update);
 	}
 }
