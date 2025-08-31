@@ -2,7 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PennyAuctionBackend.Dtos.AuctionItem;
-using PennyAuctionBackend.Service.Interfaces;
+using PennyAuctionBackend.Services.Interfaces;
 
 namespace PennyAuctionBackend.Controllers;
 

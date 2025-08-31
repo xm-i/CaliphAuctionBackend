@@ -3,11 +3,11 @@ using PennyAuctionBackend.Data;
 using PennyAuctionBackend.Dtos.User;
 using PennyAuctionBackend.Exceptions;
 using PennyAuctionBackend.Models;
-using PennyAuctionBackend.Service.Interfaces;
+using PennyAuctionBackend.Services.Interfaces;
 using PennyAuctionBackend.Utils;
 using PennyAuctionBackend.Utils.Attributes;
 
-namespace PennyAuctionBackend.Service.Implementations;
+namespace PennyAuctionBackend.Services.Implementations;
 
 [AddScoped]
 public class UserService(PennyDbContext dbContext, IConfiguration configuration) : IUserService {
@@ -36,7 +36,8 @@ public class UserService(PennyDbContext dbContext, IConfiguration configuration)
 			EmailConfirmed = false,
 			LastFailedLoginAt = null,
 			FailedLoginCount = 0,
-			IsDeleted = false
+			IsDeleted = false,
+			IsBotUser = false
 		};
 
 		this._dbContext.Users.Add(user);
@@ -97,14 +98,7 @@ public class UserService(PennyDbContext dbContext, IConfiguration configuration)
 			user.LastLoginAt = DateTime.UtcNow;
 			user.FailedLoginCount = 0;
 
-			var result = new LoginResultDto {
-				AccessToken = token,
-				User = new UserSummaryDto {
-					Id = user.Id,
-					Email = user.Email,
-					Username = user.Username
-				}
-			};
+			var result = new LoginResultDto { AccessToken = token, User = new() { Id = user.Id, Email = user.Email, Username = user.Username } };
 			return result;
 		} catch (PennyException) {
 			user.FailedLoginCount++;

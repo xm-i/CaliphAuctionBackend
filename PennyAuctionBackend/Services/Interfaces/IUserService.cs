@@ -1,6 +1,6 @@
 using PennyAuctionBackend.Dtos.User;
 
-namespace PennyAuctionBackend.Service.Interfaces;
+namespace PennyAuctionBackend.Services.Interfaces;
 
 public interface IUserService {
 	public Task RegisterAsync(RegisterUserDto registerUserDto);

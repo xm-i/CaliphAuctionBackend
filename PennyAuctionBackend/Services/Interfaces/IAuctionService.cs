@@ -1,6 +1,6 @@
 using PennyAuctionBackend.Dtos.AuctionItem;
 
-namespace PennyAuctionBackend.Service.Interfaces;
+namespace PennyAuctionBackend.Services.Interfaces;
 
 public interface IAuctionService {
 	public Task<SearchAuctionItemsResponse> SearchAsync(int? categoryId);

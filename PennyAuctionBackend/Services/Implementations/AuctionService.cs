@@ -7,10 +7,10 @@ using PennyAuctionBackend.Dtos.Realtime;
 using PennyAuctionBackend.Exceptions;
 using PennyAuctionBackend.Hubs;
 using PennyAuctionBackend.Models;
-using PennyAuctionBackend.Service.Interfaces;
+using PennyAuctionBackend.Services.Interfaces;
 using PennyAuctionBackend.Utils.Attributes;
 
-namespace PennyAuctionBackend.Service.Implementations;
+namespace PennyAuctionBackend.Services.Implementations;
 
 /// <summary>
 ///     オークションに関する読み取り系のサービス。

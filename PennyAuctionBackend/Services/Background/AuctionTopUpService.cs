@@ -59,7 +59,6 @@ public class AuctionTopUpService(
 		}
 
 		foreach (var product in candidates) {
-			var startPrice = Math.Max(1, product.OriginalPrice / 10);
 			var item = new AuctionItem {
 				ProductId = product.Id,
 				Name = product.Name,
@@ -67,8 +66,10 @@ public class AuctionTopUpService(
 				ThumbnailImageUrl = product.ThumbnailImageUrl,
 				ImageUrl = product.ImageUrl,
 				OriginalPrice = product.OriginalPrice,
-				StartingBid = startPrice,
-				CurrentPrice = startPrice,
+				StartingBid = product.StartingBid,
+				MinimumPrice = product.MinimumPrice,
+				BidIncrement = product.BidIncrement,
+				CurrentPrice = product.StartingBid,
 				CategoryId = product.CategoryId,
 				Category = product.Category,
 				EndTime = DateTime.UtcNow.AddMinutes(product.DurationMinutes),
