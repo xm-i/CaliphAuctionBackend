@@ -1,3 +1,4 @@
+using System.Data;
 using System.Net;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -100,7 +101,7 @@ public class AuctionService(PennyDbContext dbContext, IConfiguration configurati
 	/// <param name="userId">入札ユーザー ID</param>
 	/// <param name="request">入札情報</param>
 	public async Task PlaceBidAsync(int userId, PlaceBidRequest request) {
-		await using var transaction = await this._db.Database.BeginTransactionAsync();
+		await using var transaction = await this._db.Database.BeginTransactionAsync(IsolationLevel.Serializable);
 
 		var item = await this._db.AuctionItems
 			.Include(x => x.Bids)
@@ -119,15 +120,15 @@ public class AuctionService(PennyDbContext dbContext, IConfiguration configurati
 			throw new ValidationPennyException("You are already the highest bidder.");
 		}
 
-		// 入札価格の上限は現在価格よりも10%（切り上げ）以下
-		var maxAllowed = (long)decimal.Ceiling(item.CurrentPrice * 1.1m);
-		if (request.BidAmount > maxAllowed) {
-			throw new ValidationPennyException("Bid amount exceeds the maximum allowed limit.");
-		}
-
 		var userExists = await this._db.Users.AnyAsync(u => u.Id == userId);
 		if (!userExists) {
 			throw new ValidationPennyException("User not found.");
+		}
+
+		// 金額チェック：現在価格 + 入札幅 であること
+		var expectedNextAmount = item.CurrentPrice + item.BidIncrement;
+		if (request.BidAmount != expectedNextAmount) {
+			throw new ValidationPennyException($"Invalid bid amount. The next bid must be exactly {expectedNextAmount}.");
 		}
 
 		var bid = new Bid {
