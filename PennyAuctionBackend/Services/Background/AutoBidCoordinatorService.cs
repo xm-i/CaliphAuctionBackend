@@ -59,7 +59,6 @@ public class AutoBidCoordinatorService(
 			.AsNoTracking()
 			.Where(x =>
 				x.Status == AuctionStatus.Active &&
-				x.CurrentPrice < x.MinimumPrice &&
 				x.EndTime < targetTime)
 			.Select(x => x.Id)
 			.ToListAsync(ct);

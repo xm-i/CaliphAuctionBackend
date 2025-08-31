@@ -101,11 +101,12 @@ public class AuctionService(PennyDbContext dbContext, IConfiguration configurati
 	/// <param name="userId">入札ユーザー ID</param>
 	/// <param name="request">入札情報</param>
 	public async Task PlaceBidAsync(int userId, PlaceBidRequest request) {
-		await using var transaction = await this._db.Database.BeginTransactionAsync(IsolationLevel.Serializable);
+		await using var transaction = await this._db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted);
 
-		var item = await this._db.AuctionItems
-			.Include(x => x.Bids)
-			.FirstOrDefaultAsync(x => x.Id == request.AuctionItemId);
+		var itemQuery = this._db.AuctionItems
+			.FromSqlInterpolated($"SELECT * FROM \"AuctionItems\" WHERE \"Id\" = {request.AuctionItemId} FOR UPDATE")
+			.AsTracking();
+		var item = await itemQuery.FirstOrDefaultAsync();
 
 		if (item is null) {
 			throw new ValidationPennyException("Auction item not found.");

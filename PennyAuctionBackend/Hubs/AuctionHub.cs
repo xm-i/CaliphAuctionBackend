@@ -7,6 +7,7 @@ namespace PennyAuctionBackend.Hubs;
 
 public interface IAuctionClient {
 	public Task ReceiveBidUpdate(BidUpdateDto update);
+	public Task ReceiveAuctionClosed(AuctionClosedDto closed);
 }
 
 [AllowAnonymous]
