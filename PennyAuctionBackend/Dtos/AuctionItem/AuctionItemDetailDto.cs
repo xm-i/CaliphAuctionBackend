@@ -1,3 +1,5 @@
+using PennyAuctionBackend.Models;
+
 namespace PennyAuctionBackend.Dtos.AuctionItem;
 
 public class AuctionItemDetailDto {
@@ -71,7 +73,7 @@ public class AuctionItemDetailDto {
 		set;
 	}
 
-	public int Status {
+	public AuctionStatus Status {
 		get;
 		set;
 	}

@@ -1,3 +1,5 @@
+using PennyAuctionBackend.Models;
+
 namespace PennyAuctionBackend.Dtos.AuctionItem;
 
 public class AuctionItemSummaryDto {
@@ -27,6 +29,11 @@ public class AuctionItemSummaryDto {
 	}
 
 	public int CategoryId {
+		get;
+		set;
+	}
+
+	public AuctionStatus Status {
 		get;
 		set;
 	}

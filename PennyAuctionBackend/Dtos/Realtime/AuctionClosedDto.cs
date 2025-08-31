@@ -1,3 +1,5 @@
+using PennyAuctionBackend.Models;
+
 namespace PennyAuctionBackend.Dtos.Realtime;
 
 public class AuctionClosedDto {
@@ -16,7 +18,7 @@ public class AuctionClosedDto {
 		set;
 	}
 
-	public int Status {
+	public AuctionStatus Status {
 		get;
 		set;
 	}

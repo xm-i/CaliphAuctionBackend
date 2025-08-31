@@ -46,6 +46,7 @@ public class AuctionService(PennyDbContext dbContext, IConfiguration configurati
 				CurrentPrice = x.CurrentPrice,
 				EndTime = x.EndTime,
 				CategoryId = x.CategoryId,
+				Status = x.Status,
 				CurrentHighestBidUserId = x.CurrentHighestBidUserId,
 				CurrentHighestBidUserName = x.CurrentHighestBidUser != null ? x.CurrentHighestBidUser.Username : null
 			})
@@ -80,7 +81,7 @@ public class AuctionService(PennyDbContext dbContext, IConfiguration configurati
 				CurrentHighestBidUserId = x.CurrentHighestBidUserId,
 				CurrentHighestBidUserName = x.CurrentHighestBidUser != null ? x.CurrentHighestBidUser.Username : null,
 				BidCount = x.Bids.Count,
-				Status = (int)x.Status,
+				Status = x.Status,
 				BidHistories = x.Bids
 					.OrderByDescending(b => b.BidTime)
 					.Select(b => new BidHistoryDto { UserId = b.UserId, Username = b.User.Username, BidAmount = b.BidAmount, BidTime = b.BidTime })

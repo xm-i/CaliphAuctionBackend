@@ -127,7 +127,7 @@ public class AutoBidWorker(
 			AuctionItemId = latest.Id,
 			FinalPrice = latest.CurrentPrice,
 			EndTime = latest.EndTime,
-			Status = (int)latest.Status,
+			Status = latest.Status,
 			WinnerUserId = (int)latest.CurrentHighestBidUserId!
 		};
 
