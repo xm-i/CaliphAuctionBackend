@@ -64,6 +64,18 @@ public class AuctionItem : BaseEntity {
 	}
 
 	[Required]
+	public long MinimumPrice {
+		get;
+		set;
+	}
+
+	[Required]
+	public long BidIncrement {
+		get;
+		set;
+	}
+
+	[Required]
 	public long CurrentPrice {
 		get;
 		set;
@@ -113,7 +125,7 @@ public class AuctionItem : BaseEntity {
 }
 
 public enum AuctionStatus {
-	Preparing,
-	Active,
-	Ended
+	Preparing = 0,
+	Active = 1,
+	Ended = 2
 }

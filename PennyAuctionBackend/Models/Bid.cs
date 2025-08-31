@@ -39,7 +39,7 @@ public class Bid : BaseEntity {
 	} = null!;
 
 	[Required]
-	public int BidAmount {
+	public long BidAmount {
 		get;
 		set;
 	}

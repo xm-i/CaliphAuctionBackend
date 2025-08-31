@@ -42,6 +42,24 @@ public class Product : BaseEntity {
 	}
 
 	[Required]
+	public long StartingBid {
+		get;
+		set;
+	}
+
+	[Required]
+	public long MinimumPrice {
+		get;
+		set;
+	}
+
+	[Required]
+	public long BidIncrement {
+		get;
+		set;
+	}
+
+	[Required]
 	public long OriginalPrice {
 		get;
 		set;
@@ -76,7 +94,7 @@ public class Product : BaseEntity {
 	public int DurationMinutes {
 		get;
 		set;
-	} = 30;
+	}
 
 	public ICollection<AuctionItem> AuctionItems {
 		get;

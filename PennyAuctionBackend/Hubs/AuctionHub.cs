@@ -48,7 +48,7 @@ public class AuctionHub : Hub<IAuctionClient> {
 	/// <param name="itemIds">itemIdリスト</param>
 	public async Task SetVisibleItems(int[] itemIds) {
 		var connId = this.Context.ConnectionId;
-		var newSet = itemIds?.ToHashSet() ?? [];
+		var newSet = itemIds.ToHashSet();
 
 		var current = VisibleItemsByConnection.GetOrAdd(connId, _ => []);
 		HashSet<int> toAdd;

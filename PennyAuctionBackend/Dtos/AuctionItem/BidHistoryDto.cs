@@ -11,7 +11,7 @@ public class BidHistoryDto {
 		set;
 	}
 
-	public int BidAmount {
+	public long BidAmount {
 		get;
 		set;
 	}

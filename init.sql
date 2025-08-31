@@ -165,3 +165,38 @@ VALUES
 ('多機能ツールナイフ', 'アウトドア・防災用。', '/src/assets/thumbnail-sample.png', '/src/assets/image-sample.png', 1980, 5, 25, TRUE, 60, NOW(), NOW()),
 ('携帯用浄水ボトル', 'いつでも水を浄化可能。', '/src/assets/thumbnail-sample.png', '/src/assets/image-sample.png', 2980, 5, 30, TRUE, 60, NOW(), NOW()),
 ('折りたたみハンモック', '軽量で携帯可能。', '/src/assets/thumbnail-sample.png', '/src/assets/image-sample.png', 3980, 5, 20, TRUE, 120, NOW(), NOW());
+
+INSERT INTO "Users"
+("Email", "PasswordHash", "PasswordSalt", "Username", "LastLoginAt", "LastFailedLoginAt",
+ "FailedLoginCount", "EmailConfirmed", "IsDeleted", "CreatedAt", "UpdatedAt", "IsBotUser")
+VALUES
+('auctionbot01@example.com', '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', 'AuctionBOT01', NULL, NULL, 0, TRUE, FALSE, NOW(), NOW(), TRUE),
+('auctionbot02@example.com', '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', 'AuctionBOT02', NULL, NULL, 0, TRUE, FALSE, NOW(), NOW(), TRUE),
+('auctionbot03@example.com', '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', 'AuctionBOT03', NULL, NULL, 0, TRUE, FALSE, NOW(), NOW(), TRUE),
+('auctionbot04@example.com', '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', 'AuctionBOT04', NULL, NULL, 0, TRUE, FALSE, NOW(), NOW(), TRUE),
+('auctionbot05@example.com', '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', 'AuctionBOT05', NULL, NULL, 0, TRUE, FALSE, NOW(), NOW(), TRUE),
+('auctionbot06@example.com', '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', 'AuctionBOT06', NULL, NULL, 0, TRUE, FALSE, NOW(), NOW(), TRUE),
+('auctionbot07@example.com', '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', 'AuctionBOT07', NULL, NULL, 0, TRUE, FALSE, NOW(), NOW(), TRUE),
+('auctionbot08@example.com', '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', 'AuctionBOT08', NULL, NULL, 0, TRUE, FALSE, NOW(), NOW(), TRUE),
+('auctionbot09@example.com', '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', 'AuctionBOT09', NULL, NULL, 0, TRUE, FALSE, NOW(), NOW(), TRUE),
+('auctionbot10@example.com', '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', 'AuctionBOT10', NULL, NULL, 0, TRUE, FALSE, NOW(), NOW(), TRUE),
+('auctionbot11@example.com', '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', 'AuctionBOT11', NULL, NULL, 0, TRUE, FALSE, NOW(), NOW(), TRUE),
+('auctionbot12@example.com', '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', 'AuctionBOT12', NULL, NULL, 0, TRUE, FALSE, NOW(), NOW(), TRUE),
+('auctionbot13@example.com', '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', 'AuctionBOT13', NULL, NULL, 0, TRUE, FALSE, NOW(), NOW(), TRUE),
+('auctionbot14@example.com', '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', 'AuctionBOT14', NULL, NULL, 0, TRUE, FALSE, NOW(), NOW(), TRUE),
+('auctionbot15@example.com', '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', 'AuctionBOT15', NULL, NULL, 0, TRUE, FALSE, NOW(), NOW(), TRUE),
+('auctionbot16@example.com', '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', 'AuctionBOT16', NULL, NULL, 0, TRUE, FALSE, NOW(), NOW(), TRUE),
+('auctionbot17@example.com', '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', 'AuctionBOT17', NULL, NULL, 0, TRUE, FALSE, NOW(), NOW(), TRUE),
+('auctionbot18@example.com', '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', 'AuctionBOT18', NULL, NULL, 0, TRUE, FALSE, NOW(), NOW(), TRUE),
+('auctionbot19@example.com', '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', 'AuctionBOT19', NULL, NULL, 0, TRUE, FALSE, NOW(), NOW(), TRUE),
+('auctionbot20@example.com', '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', 'AuctionBOT20', NULL, NULL, 0, TRUE, FALSE, NOW(), NOW(), TRUE),
+('auctionbot21@example.com', '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', 'AuctionBOT21', NULL, NULL, 0, TRUE, FALSE, NOW(), NOW(), TRUE),
+('auctionbot22@example.com', '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', 'AuctionBOT22', NULL, NULL, 0, TRUE, FALSE, NOW(), NOW(), TRUE),
+('auctionbot23@example.com', '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', 'AuctionBOT23', NULL, NULL, 0, TRUE, FALSE, NOW(), NOW(), TRUE),
+('auctionbot24@example.com', '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', 'AuctionBOT24', NULL, NULL, 0, TRUE, FALSE, NOW(), NOW(), TRUE),
+('auctionbot25@example.com', '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', 'AuctionBOT25', NULL, NULL, 0, TRUE, FALSE, NOW(), NOW(), TRUE),
+('auctionbot26@example.com', '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', 'AuctionBOT26', NULL, NULL, 0, TRUE, FALSE, NOW(), NOW(), TRUE),
+('auctionbot27@example.com', '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', 'AuctionBOT27', NULL, NULL, 0, TRUE, FALSE, NOW(), NOW(), TRUE),
+('auctionbot28@example.com', '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', 'AuctionBOT28', NULL, NULL, 0, TRUE, FALSE, NOW(), NOW(), TRUE),
+('auctionbot29@example.com', '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', 'AuctionBOT29', NULL, NULL, 0, TRUE, FALSE, NOW(), NOW(), TRUE),
+('auctionbot30@example.com', '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', 'AuctionBOT30', NULL, NULL, 0, TRUE, FALSE, NOW(), NOW(), TRUE);

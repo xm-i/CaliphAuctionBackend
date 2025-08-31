@@ -58,10 +58,15 @@ public class User : BaseEntity {
 	public bool EmailConfirmed {
 		get;
 		set;
-	} = false;
+	}
 
 	public bool IsDeleted {
 		get;
 		set;
-	} = false;
+	}
+
+	public bool IsBotUser {
+		get;
+		set;
+	}
 }

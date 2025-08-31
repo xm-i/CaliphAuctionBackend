@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using PennyAuctionBackend.Data;
 using PennyAuctionBackend.Hubs;
 using PennyAuctionBackend.Services.Background;
+using PennyAuctionBackend.Services.Infrastructure;
 using PennyAuctionBackend.Utils.Attributes;
 
 namespace PennyAuctionBackend;
@@ -13,6 +14,9 @@ namespace PennyAuctionBackend;
 public static class Program {
 	public static void Main(string[] args) {
 		var app = Build(args);
+
+		BotUserCache.Initialize(app.Services);
+
 		if (app.Environment.IsDevelopment()) {
 			app.MapOpenApi();
 		}
@@ -40,7 +44,10 @@ public static class Program {
 		RegisterServices(builder.Services);
 
 		builder.Services.Configure<AuctionOptions>(builder.Configuration.GetSection("Auction"));
+		builder.Services.Configure<AutoBidOptions>(builder.Configuration.GetSection("AutoBid"));
+
 		builder.Services.AddHostedService<AuctionTopUpService>();
+		builder.Services.AddHostedService<AutoBidCoordinatorService>();
 
 		var jwtKey = builder.Configuration["Jwt:Key"];
 		var jwtIssuer = builder.Configuration["Jwt:Issuer"];
