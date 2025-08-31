@@ -45,7 +45,8 @@ public class AuctionService(PennyDbContext dbContext, IConfiguration configurati
 				CurrentPrice = x.CurrentPrice,
 				EndTime = x.EndTime,
 				CategoryId = x.CategoryId,
-				CurrentUserName = x.CurrentHighestBidUser != null ? x.CurrentHighestBidUser.Username : null
+				CurrentHighestBidUserId = x.CurrentHighestBidUserId,
+				CurrentHighestBidUserName = x.CurrentHighestBidUser != null ? x.CurrentHighestBidUser.Username : null
 			})
 			.ToListAsync();
 

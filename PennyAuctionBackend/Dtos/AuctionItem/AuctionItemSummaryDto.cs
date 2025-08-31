@@ -31,7 +31,12 @@ public class AuctionItemSummaryDto {
 		set;
 	}
 
-	public string? CurrentUserName {
+	public int? CurrentHighestBidUserId {
+		get;
+		set;
+	}
+
+	public string? CurrentHighestBidUserName {
 		get;
 		set;
 	}
