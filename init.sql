@@ -200,3 +200,7 @@ VALUES
 ('auctionbot28@example.com', '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', 'AuctionBOT28', NULL, NULL, 0, TRUE, FALSE, NOW(), NOW(), TRUE),
 ('auctionbot29@example.com', '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', 'AuctionBOT29', NULL, NULL, 0, TRUE, FALSE, NOW(), NOW(), TRUE),
 ('auctionbot30@example.com', '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789', 'AuctionBOT30', NULL, NULL, 0, TRUE, FALSE, NOW(), NOW(), TRUE);
+
+INSERT INTO "Campaigns"
+("Id", "Name", "Description", "StartsAt", "EndsAt", "IsActive", "CreatedAt", "UpdatedAt")
+VALUES(0, '初回登録', '初回登録の方に無料ポイント進呈中', NULL, NULL, TRUE, NOW(), NOW());
