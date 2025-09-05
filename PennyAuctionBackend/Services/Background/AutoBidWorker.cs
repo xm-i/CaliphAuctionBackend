@@ -46,7 +46,7 @@ public class AutoBidWorker(
 			if (initial.CurrentPrice >= initial.MinimumPrice) {
 				await this.FinalizeAsync(scope, db, initial, ct);
 			} else {
-				await this.BotBidAsync(scope, db, initial, ct);
+				await this.BotBidAsync(scope, initial, ct);
 			}
 		} catch (OperationCanceledException) {
 			// 正常停止
@@ -61,10 +61,9 @@ public class AutoBidWorker(
 	///     Bot入札処理
 	/// </summary>
 	/// <param name="scope">Scope</param>
-	/// <param name="db">DbContext</param>
 	/// <param name="initial">初回取得値</param>
 	/// <param name="ct">CancellationToken</param>
-	private async Task BotBidAsync(IServiceScope scope, PennyDbContext db, AuctionItem initial, CancellationToken ct) {
+	private async Task BotBidAsync(IServiceScope scope, AuctionItem initial, CancellationToken ct) {
 		var auctionService = scope.ServiceProvider.GetRequiredService<IAuctionService>();
 		// 次回入札タイミングを決定して待機
 		var slackSec = Random.Shared.Next(5, 20);
