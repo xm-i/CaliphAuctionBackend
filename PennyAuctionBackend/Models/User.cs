@@ -69,4 +69,28 @@ public class User : BaseEntity {
 		get;
 		set;
 	}
+
+	/// <summary>冗長: 現在のポイント残高。破損時は取引履歴から再計算可</summary>
+	public int PointBalance {
+		get;
+		set;
+	}
+
+	/// <summary>ポイント取引ヘッダ一覧</summary>
+	public ICollection<PointTransaction> PointTransactions {
+		get;
+		set;
+	} = [];
+
+	/// <summary>ポイント原価一覧</summary>
+	public ICollection<PointBalanceLot> PointBalanceLots {
+		get;
+		set;
+	} = [];
+
+	/// <summary>ポイント購入履歴</summary>
+	public ICollection<PointPurchase> PointPurchases {
+		get;
+		set;
+	} = [];
 }

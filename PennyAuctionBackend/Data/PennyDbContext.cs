@@ -34,6 +34,31 @@ public class PennyDbContext(DbContextOptions<PennyDbContext> options) : DbContex
 		set;
 	}
 
+	public required DbSet<PointTransaction> PointTransactions {
+		get;
+		set;
+	}
+
+	public required DbSet<PointTransactionEntry> PointTransactionEntries {
+		get;
+		set;
+	}
+
+	public required DbSet<PointBalanceLot> PointBalanceLots {
+		get;
+		set;
+	}
+
+	public required DbSet<Campaign> Campaigns {
+		get;
+		set;
+	}
+
+	public required DbSet<PointPurchase> PointPurchases {
+		get;
+		set;
+	}
+
 	public override int SaveChanges() {
 		this.UpdateTimestamps();
 		return base.SaveChanges();
