@@ -119,6 +119,18 @@ public class AutoBidWorker(
 
 		// End → ステータス更新
 		latest.Status = AuctionStatus.Ended;
+
+		// 落札ユーザー通知 (ユーザーが存在する場合のみ)
+		if (latest.CurrentHighestBidUserId.HasValue) {
+			db.Notifications.Add(new Notification {
+				UserId = latest.CurrentHighestBidUserId.Value,
+				Category = "bidWin",
+				Title = "落札おめでとうございます",
+				Message = $"『{latest.Name}』を {latest.CurrentPrice} で落札しました。",
+				IsRead = false
+			});
+		}
+
 		await db.SaveChangesAsync(ct);
 		await tx.CommitAsync(ct);
 
@@ -131,7 +143,7 @@ public class AutoBidWorker(
 		};
 
 		await hub.Clients.Group(AuctionHub.BuildGroupName(latest.Id)).ReceiveAuctionClosed(dto);
-		this._logger.LogInformation("Auction {ItemId} closed and notified.", latest.Id);
+		this._logger.LogInformation("Auction {ItemId} closed, notification created and clients notified.", latest.Id);
 	}
 
 	private async Task<AuctionItem?> GetLatestAuctionItemAsync(PennyDbContext db, AuctionItem initial, CancellationToken ct) {

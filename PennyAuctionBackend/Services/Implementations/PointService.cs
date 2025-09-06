@@ -129,6 +129,15 @@ public class PointService(PennyDbContext db, IConfiguration config) : IPointServ
 		this._db.PointTransactions.Add(pt);
 		this._db.PointTransactionEntries.Add(entry);
 
+		// 通知追加
+		this._db.Notifications.Add(new() {
+			UserId = user.Id,
+			Category = "purchase",
+			Title = "ポイントチャージ完了",
+			Message = $"{pointPlan.Points}pt をチャージしました (¥{pointPlan.Price})",
+			IsRead = false
+		});
+
 		await this._db.SaveChangesAsync();
 		await transaction.CommitAsync();
 

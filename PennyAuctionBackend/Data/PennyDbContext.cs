@@ -64,6 +64,11 @@ public class PennyDbContext(DbContextOptions<PennyDbContext> options) : DbContex
 		set;
 	}
 
+	public required DbSet<Notification> Notifications {
+		get;
+		set;
+	}
+
 	public override int SaveChanges() {
 		this.UpdateTimestamps();
 		return base.SaveChanges();
