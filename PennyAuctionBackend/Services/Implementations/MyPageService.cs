@@ -1,7 +1,10 @@
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using PennyAuctionBackend.Data;
+using PennyAuctionBackend.Dtos.AuctionItem;
 using PennyAuctionBackend.Dtos.MyPage;
 using PennyAuctionBackend.Exceptions;
+using PennyAuctionBackend.Models;
 using PennyAuctionBackend.Services.Interfaces;
 using PennyAuctionBackend.Utils.Attributes;
 
@@ -36,5 +39,41 @@ public class MyPageService(PennyDbContext db) : IMyPageService {
 			.ToListAsync();
 
 		return new() { PointBalance = user.PointBalance, TotalSpentAmount = totalSpent, Notifications = notifications };
+	}
+
+	public async Task<SearchAuctionItemsResponse> GetBiddingItemsAsync(int userId, int? limit) {
+		return await this.GetAuctionItemsWithPredicateAsync(limit, ai => ai.Status == AuctionStatus.Active && ai.Bids.Any(b => b.UserId == userId));
+	}
+
+	public async Task<SearchAuctionItemsResponse> GetWonItemsAsync(int userId, int? limit) {
+		return await this.GetAuctionItemsWithPredicateAsync(limit, ai => ai.Status == AuctionStatus.Ended && ai.CurrentHighestBidUserId == userId);
+	}
+
+	private async Task<SearchAuctionItemsResponse> GetAuctionItemsWithPredicateAsync(int? limit, Expression<Func<AuctionItem, bool>> predicate) {
+		IQueryable<AuctionItem> query = this._db.AuctionItems
+			.AsNoTracking()
+			.Where(predicate)
+			.OrderByDescending(ai => ai.EndTime);
+
+		var total = await query.CountAsync();
+		if (limit is { } intLimit) {
+			query = query.Take(intLimit);
+		}
+
+		var items = await query
+			.Include(ai => ai.CurrentHighestBidUser)
+			.Select(ai => new AuctionItemSummaryDto {
+				Id = ai.Id,
+				Name = ai.Name,
+				ThumbnailImageUrl = ai.ThumbnailImageUrl,
+				CurrentPrice = ai.CurrentPrice,
+				EndTime = ai.EndTime,
+				CategoryId = ai.CategoryId,
+				Status = ai.Status,
+				CurrentHighestBidUserId = ai.CurrentHighestBidUserId,
+				CurrentHighestBidUserName = ai.CurrentHighestBidUser != null ? ai.CurrentHighestBidUser.Username : null
+			}).ToListAsync();
+
+		return new() { Items = items, TotalCount = total };
 	}
 }
