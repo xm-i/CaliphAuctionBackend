@@ -73,7 +73,8 @@ public class AuctionTopUpService(
 				CategoryId = product.CategoryId,
 				Category = product.Category,
 				EndTime = DateTime.UtcNow.AddMinutes(product.DurationMinutes),
-				Status = AuctionStatus.Active
+				Status = AuctionStatus.Active,
+				BidPointCost = product.BidPointCost
 			};
 			db.AuctionItems.Add(item);
 

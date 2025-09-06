@@ -96,6 +96,12 @@ public class Product : BaseEntity {
 		set;
 	}
 
+	[Required]
+	public int BidPointCost {
+		get;
+		set;
+	}
+
 	public ICollection<AuctionItem> AuctionItems {
 		get;
 		set;

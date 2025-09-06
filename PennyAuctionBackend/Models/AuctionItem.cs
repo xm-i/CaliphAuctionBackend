@@ -118,6 +118,12 @@ public class AuctionItem : BaseEntity {
 		set;
 	}
 
+	[Required]
+	public int BidPointCost {
+		get;
+		set;
+	}
+
 	public ICollection<Bid> Bids {
 		get;
 		set;

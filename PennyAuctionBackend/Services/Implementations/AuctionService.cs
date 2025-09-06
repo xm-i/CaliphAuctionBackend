@@ -97,18 +97,16 @@ public class AuctionService(PennyDbContext dbContext, IConfiguration configurati
 	}
 
 	/// <summary>
-	///     入札を行う。
+	///     入札を行い、ポイントを消費する。
 	/// </summary>
-	/// <param name="userId">入札ユーザー ID</param>
-	/// <param name="request">入札情報</param>
 	public async Task PlaceBidAsync(int userId, PlaceBidRequest request) {
 		await using var transaction = await this._db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted);
 
-		var itemQuery = this._db.AuctionItems
+		// アイテム行ロック
+		var item = await this._db.AuctionItems
 			.FromSqlInterpolated($"SELECT * FROM \"AuctionItems\" WHERE \"Id\" = {request.AuctionItemId} FOR UPDATE")
-			.AsTracking();
-		var item = await itemQuery.FirstOrDefaultAsync();
-
+			.AsTracking()
+			.FirstOrDefaultAsync();
 		if (item is null) {
 			throw new ValidationPennyException("Auction item not found.");
 		}
@@ -122,17 +120,22 @@ public class AuctionService(PennyDbContext dbContext, IConfiguration configurati
 			throw new ValidationPennyException("You are already the highest bidder.");
 		}
 
-		var userExists = await this._db.Users.AnyAsync(u => u.Id == userId);
-		if (!userExists) {
+		// ユーザー行ロック (残高整合性確保)
+		var user = await this._db.Users
+			.FromSqlInterpolated($"SELECT * FROM \"Users\" WHERE \"Id\" = {userId} FOR UPDATE")
+			.AsTracking()
+			.FirstOrDefaultAsync();
+		if (user is null) {
 			throw new ValidationPennyException("User not found.");
 		}
 
-		// 金額チェック：現在価格 + 入札幅 であること
+		// 次の入札金額検証
 		var expectedNextAmount = item.CurrentPrice + item.BidIncrement;
 		if (request.BidAmount != expectedNextAmount) {
 			throw new ValidationPennyException($"Invalid bid amount. The next bid must be exactly {expectedNextAmount}.");
 		}
 
+		// 入札エンティティ作成
 		var bid = new Bid {
 			AuctionItemId = item.Id,
 			AuctionItem = item,
@@ -140,8 +143,15 @@ public class AuctionService(PennyDbContext dbContext, IConfiguration configurati
 			BidAmount = request.BidAmount,
 			BidTime = DateTime.UtcNow
 		};
+		// BOTでなければポイント消費
+		if (!user.IsBotUser) {
+			await this.ConsumeBidPointsAsync(user, bid, item.BidPointCost);
+		}
+
 		this._db.Bids.Add(bid);
 
+
+		// 残り時間の延長判定
 		var nullableMinimumEndTimeSeconds = this._configuration.GetValue<int?>("Auction:MinimumEndTimeSeconds", null);
 		if (nullableMinimumEndTimeSeconds is not { } minimumEndTimeSeconds) {
 			throw new ConfigurationPennyException("Auction:MinimumEndTimeSeconds configuration is missing.");
@@ -154,11 +164,6 @@ public class AuctionService(PennyDbContext dbContext, IConfiguration configurati
 			item.EndTime = minimumEndTime;
 		}
 
-		var username = await this._db.Users
-			.Where(u => u.Id == userId)
-			.Select(u => u.Username)
-			.FirstAsync();
-
 		await this._db.SaveChangesAsync();
 		await transaction.CommitAsync();
 
@@ -169,9 +174,53 @@ public class AuctionService(PennyDbContext dbContext, IConfiguration configurati
 			BidId = bid.Id,
 			BidTime = bid.BidTime,
 			CurrentHighestBidUserId = userId,
-			CurrentHighestBidUserName = username
+			CurrentHighestBidUserName = user.Username
 		};
 
 		await this._hub.Clients.Group(AuctionHub.BuildGroupName(item.Id)).ReceiveBidUpdate(update);
+	}
+
+	/// <summary>
+	///     入札1回分のポイントを消費し、Spendトランザクションと明細を生成。
+	/// </summary>
+	/// <param name="user">入札ユーザー</param>
+	/// <param name="bid">入札エンティティ</param>
+	/// <param name="perBidCost">消費ポイント</param>
+	private async Task ConsumeBidPointsAsync(User user, Bid bid, int perBidCost) {
+		if (user.PointBalance < perBidCost) {
+			throw new ValidationPennyException("Insufficient points.");
+		}
+
+		var remaining = perBidCost;
+		var lots = await this._db.PointBalanceLots
+			.Where(l => l.UserId == user.Id && l.QuantityRemaining > 0)
+			.OrderBy(l => l.UnitPrice)
+			.ToListAsync();
+
+		var entries = new List<PointTransactionEntry>();
+		foreach (var lot in lots) {
+			if (remaining <= 0) {
+				break;
+			}
+
+			var take = Math.Min(lot.QuantityRemaining, remaining);
+			lot.QuantityRemaining -= take;
+			remaining -= take;
+			var totalPrice = (int)(lot.UnitPrice * take);
+			entries.Add(new() { PointBalanceLotId = lot.Id, Quantity = -take, UnitPrice = lot.UnitPrice, TotalPrice = totalPrice });
+		}
+
+		user.PointBalance -= perBidCost;
+
+		var spendTx = new PointTransaction {
+			UserId = user.Id,
+			Type = PointTransactionType.Spend,
+			TotalAmount = -perBidCost,
+			BalanceAfter = user.PointBalance,
+			Bid = bid,
+			Note = "Bid spend",
+			Entries = entries
+		};
+		this._db.PointTransactions.Add(spendTx);
 	}
 }
