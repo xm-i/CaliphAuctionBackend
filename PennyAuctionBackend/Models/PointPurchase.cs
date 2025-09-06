@@ -8,6 +8,7 @@ namespace PennyAuctionBackend.Models;
 ///     ポイント購入申込/確定レコード。外部決済とユーザー付与を紐づける。
 /// </summary>
 [Index(nameof(UserId), nameof(CreatedAt))]
+[Index(nameof(ExternalTokenJti), IsUnique = true)]
 public class PointPurchase : BaseEntity {
 	[Key]
 	public int Id {
@@ -45,6 +46,13 @@ public class PointPurchase : BaseEntity {
 	/// <summary>メモ</summary>
 	[MaxLength(255)]
 	public string? Note {
+		get;
+		set;
+	}
+
+	/// <summary>外部決済トークンJTI (再利用防止) - 外部経路以外は null</summary>
+	[MaxLength(64)]
+	public string? ExternalTokenJti {
 		get;
 		set;
 	}

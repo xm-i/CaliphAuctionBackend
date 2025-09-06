@@ -204,3 +204,11 @@ VALUES
 INSERT INTO "Campaigns"
 ("Id", "Name", "Description", "StartsAt", "EndsAt", "IsActive", "CreatedAt", "UpdatedAt")
 VALUES(0, '初回登録', '初回登録の方に無料ポイント進呈中', NULL, NULL, TRUE, NOW(), NOW());
+
+INSERT INTO "PointPlans" ("Name", "Points", "Price", "CreatedAt", "UpdatedAt") VALUES
+('スタンダードプラン', 500, 500, NOW(), NOW()),
+('ベーシックプラン', 1000, 1000, NOW(), NOW()),
+('レギュラープラン', 3000, 3000, NOW(), NOW()),
+('プレミアムプラン', 5250, 5000, NOW(), NOW()),
+('ゴールドプラン', 11000, 10000, NOW(), NOW()),
+('プラチナプラン', 60000, 50000, NOW(), NOW());
