@@ -146,6 +146,11 @@ namespace PennyAuctionBackend.Services.Implementations {
 			}
 		}
 
+		public async Task<UserSummaryDto?> GetByIdAsync(int userId) {
+			var user = await this._dbContext.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted);
+			return user == null ? null : new UserSummaryDto { Id = user.Id, Email = user.Email, Username = user.Username };
+		}
+
 		private async Task ValidateAsync(RegisterUserDto request) {
 			if (await this._dbContext.Users.AnyAsync(u => u.Email == request.Email)) {
 				throw new ValidationPennyException("Email already exists.");

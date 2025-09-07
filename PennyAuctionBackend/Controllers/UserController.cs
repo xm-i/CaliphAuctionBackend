@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PennyAuctionBackend.Dtos.User;
 using PennyAuctionBackend.Services.Interfaces;
+using System.Security.Claims;
 
 namespace PennyAuctionBackend.Controllers;
 
@@ -31,5 +32,19 @@ public class UserController(IUserService userService) : ControllerBase {
 
 		var result = await this._userService.LoginAsync(loginDto, ipAddress);
 		return this.Ok(result);
+	}
+
+	[HttpGet("me")]
+	[Authorize]
+	public async Task<ActionResult<UserSummaryDto>> MeAsync() {
+		var userIdStr = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
+		if (!int.TryParse(userIdStr, out var userId)) {
+			return this.Unauthorized();
+		}
+		var user = await this._userService.GetByIdAsync(userId);
+		if (user == null) {
+			return this.NotFound();
+		}
+		return this.Ok(user);
 	}
 }
