@@ -61,7 +61,7 @@ public class PointService(PennyDbContext db, IConfiguration config) : IPointServ
 			throw new ValidationPennyException("Invalid token type");
 		}
 
-		if (!claims.TryGetValue("provider", out var provider) || provider != "paypal") {
+		if (!claims.TryGetValue("provider", out var provider) || string.IsNullOrEmpty(provider)) {
 			throw new ValidationPennyException("Invalid provider");
 		}
 
