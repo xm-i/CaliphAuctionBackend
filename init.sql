@@ -1,12 +1,13 @@
 -- =========================================
 -- AuctionItemCategories
 -- =========================================
-INSERT INTO "AuctionItemCategories" ("Id", "Name", "CreatedAt", "UpdatedAt") VALUES
-(1, 'スマートフォン・タブレット', NOW(), NOW()),
-(2, 'PC関係', NOW(), NOW()),
-(3, '生活家電', NOW(), NOW()),
-(4, 'ゲーム', NOW(), NOW()),
-(5, 'その他', NOW(), NOW());
+INSERT INTO "AuctionItemCategories" ("Id", "Name", "Description", "CreatedAt", "UpdatedAt") VALUES
+(1, 'スマートフォン・タブレット', 'ライフスタイルを格上げする、洗練された最先端ガジェット', NOW(), NOW()),
+(2, 'PC関係', 'ハイパフォーマンスと美しいデザインを兼ね備えた逸品', NOW(), NOW()),
+(3, '生活家電', '日常を上質に彩る、信頼と品質の家電コレクション', NOW(), NOW()),
+(4, 'ゲーム', '時を忘れる体験。珠玉のエンターテインメント作品群', NOW(), NOW()),
+(5, 'その他', 'ここでしか出会えない特別な一品。未知との邂逅をお楽しみください', NOW(), NOW());
+
 
 -- =========================================
 -- Products

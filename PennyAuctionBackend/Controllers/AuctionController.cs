@@ -25,6 +25,13 @@ public class AuctionController(IAuctionService auctionService) : ControllerBase 
 		return this.Ok(dto);
 	}
 
+	[HttpGet("categories")]
+	[AllowAnonymous]
+	public async Task<ActionResult<IReadOnlyList<CategoryDto>>> GetCategoriesAsync() {
+		var list = await this._auctionService.GetCategoriesAsync();
+		return this.Ok(list);
+	}
+
 	[HttpPost("place-bid")]
 	[Authorize]
 	public async Task<IActionResult> PlaceBidAsync([FromBody] PlaceBidRequest request) {

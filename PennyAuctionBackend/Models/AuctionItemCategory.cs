@@ -18,6 +18,13 @@ public class AuctionItemCategory : BaseEntity {
 		set;
 	}
 
+	[MaxLength(255)]
+	[Required]
+	public required string Description {
+		get;
+		set;
+	}
+
 	public ICollection<AuctionItem> AuctionItems {
 		get;
 		set;

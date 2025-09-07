@@ -55,6 +55,15 @@ public class AuctionService(PennyDbContext dbContext, IConfiguration configurati
 		return new() { Items = items, TotalCount = total };
 	}
 
+	public async Task<IReadOnlyList<CategoryDto>> GetCategoriesAsync() {
+		var categories = await this._db.AuctionItemCategories
+			.AsNoTracking()
+			.OrderBy(c => c.Id)
+			.Select(c => new CategoryDto { Id = c.Id, Name = c.Name, Description = c.Description, ActiveItemCount = c.AuctionItems.Count(ai => ai.Status == AuctionStatus.Active) })
+			.ToListAsync();
+		return categories;
+	}
+
 	/// <summary>
 	///     商品IDで詳細を取得します。
 	/// </summary>
