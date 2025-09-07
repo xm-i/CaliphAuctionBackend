@@ -23,6 +23,16 @@ public class AuctionItemSummaryDto {
 		set;
 	}
 
+	public long BidIncrement {
+		get;
+		set;
+	}
+
+	public int BidPointCost {
+		get;
+		set;
+	}
+
 	public DateTime EndTime {
 		get;
 		set;

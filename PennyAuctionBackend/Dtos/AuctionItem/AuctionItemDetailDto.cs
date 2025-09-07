@@ -38,6 +38,16 @@ public class AuctionItemDetailDto {
 		set;
 	}
 
+	public long BidIncrement {
+		get;
+		set;
+	}
+
+	public int BidPointCost {
+		get;
+		set;
+	}
+
 	public long CurrentPrice {
 		get;
 		set;

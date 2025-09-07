@@ -67,6 +67,8 @@ public class MyPageService(PennyDbContext db) : IMyPageService {
 				Name = ai.Name,
 				ThumbnailImageUrl = ai.ThumbnailImageUrl,
 				CurrentPrice = ai.CurrentPrice,
+				BidIncrement = ai.BidIncrement,
+				BidPointCost = ai.BidPointCost,
 				EndTime = ai.EndTime,
 				CategoryId = ai.CategoryId,
 				Status = ai.Status,
