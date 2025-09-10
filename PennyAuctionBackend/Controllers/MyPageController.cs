@@ -1,9 +1,9 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PennyAuctionBackend.Dtos.AuctionItem;
 using PennyAuctionBackend.Dtos.MyPage;
 using PennyAuctionBackend.Services.Interfaces;
-using PennyAuctionBackend.Dtos.AuctionItem;
 
 namespace PennyAuctionBackend.Controllers;
 
@@ -30,6 +30,7 @@ public class MyPageController(IMyPageService myPageService) : ControllerBase {
 		if (!int.TryParse(userIdStr, out var userId)) {
 			return this.Unauthorized();
 		}
+
 		var list = await this._myPageService.GetBiddingItemsAsync(userId, limit);
 		return this.Ok(list);
 	}
@@ -40,6 +41,7 @@ public class MyPageController(IMyPageService myPageService) : ControllerBase {
 		if (!int.TryParse(userIdStr, out var userId)) {
 			return this.Unauthorized();
 		}
+
 		var list = await this._myPageService.GetWonItemsAsync(userId, limit);
 		return this.Ok(list);
 	}

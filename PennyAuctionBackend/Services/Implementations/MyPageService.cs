@@ -7,6 +7,7 @@ using PennyAuctionBackend.Exceptions;
 using PennyAuctionBackend.Models;
 using PennyAuctionBackend.Services.Interfaces;
 using PennyAuctionBackend.Utils.Attributes;
+// Added for LINQ extension methods like Select
 
 namespace PennyAuctionBackend.Services.Implementations;
 
@@ -62,6 +63,7 @@ public class MyPageService(PennyDbContext db) : IMyPageService {
 
 		var items = await query
 			.Include(ai => ai.CurrentHighestBidUser)
+			.Include(ai => ai.Purchase)
 			.Select(ai => new AuctionItemSummaryDto {
 				Id = ai.Id,
 				Name = ai.Name,
@@ -73,8 +75,10 @@ public class MyPageService(PennyDbContext db) : IMyPageService {
 				CategoryId = ai.CategoryId,
 				Status = ai.Status,
 				CurrentHighestBidUserId = ai.CurrentHighestBidUserId,
-				CurrentHighestBidUserName = ai.CurrentHighestBidUser != null ? ai.CurrentHighestBidUser.Username : null
-			}).ToListAsync();
+				CurrentHighestBidUserName = ai.CurrentHighestBidUser != null ? ai.CurrentHighestBidUser.Username : null,
+				Purchased = ai.Purchase != null
+			})
+			.ToListAsync();
 
 		return new() { Items = items, TotalCount = total };
 	}

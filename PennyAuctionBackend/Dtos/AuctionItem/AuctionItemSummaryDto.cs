@@ -57,4 +57,9 @@ public class AuctionItemSummaryDto {
 		get;
 		set;
 	}
+
+	public bool Purchased {
+		get;
+		set;
+	}
 }

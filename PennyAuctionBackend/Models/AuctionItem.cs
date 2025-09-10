@@ -128,6 +128,11 @@ public class AuctionItem : BaseEntity {
 		get;
 		set;
 	} = [];
+
+	public AuctionItemPurchase? Purchase {
+		get;
+		set;
+	}
 }
 
 public enum AuctionStatus {
