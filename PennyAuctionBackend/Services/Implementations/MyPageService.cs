@@ -7,7 +7,6 @@ using PennyAuctionBackend.Exceptions;
 using PennyAuctionBackend.Models;
 using PennyAuctionBackend.Services.Interfaces;
 using PennyAuctionBackend.Utils.Attributes;
-// Added for LINQ extension methods like Select
 
 namespace PennyAuctionBackend.Services.Implementations;
 
@@ -21,9 +20,15 @@ public class MyPageService(PennyDbContext db) : IMyPageService {
 			throw new ValidationPennyException("User not found.");
 		}
 
-		var totalSpent = await this._db.PointPurchases
+		var pointPurchaseSpent = await this._db.PointPurchases
 			.Where(p => p.UserId == userId)
 			.SumAsync(p => (int?)p.AmountPaid) ?? 0;
+
+		var auctionItemDepositSpent = await this._db.AuctionItemPurchases
+			.Where(p => p.UserId == userId)
+			.SumAsync(p => (int?)p.DepositAmount) ?? 0;
+
+		var totalSpent = auctionItemDepositSpent + pointPurchaseSpent;
 
 		var notifications = await this._db.Notifications
 			.Where(n => n.UserId == null || n.UserId == userId)
