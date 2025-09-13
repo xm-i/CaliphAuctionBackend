@@ -14,7 +14,7 @@ public class Product : BaseEntity {
 	}
 
 	[Required]
-	[MaxLength(50)]
+	[MaxLength(255)]
 	public required string Name {
 		get;
 		set;

@@ -24,7 +24,7 @@ public class AuctionItem : BaseEntity {
 	}
 
 	[Required]
-	[MaxLength(50)]
+	[MaxLength(255)]
 	public required string Name {
 		get;
 		set;
@@ -77,6 +77,12 @@ public class AuctionItem : BaseEntity {
 
 	[Required]
 	public long CurrentPrice {
+		get;
+		set;
+	}
+
+	[Required]
+	public long TotalBidCost {
 		get;
 		set;
 	}

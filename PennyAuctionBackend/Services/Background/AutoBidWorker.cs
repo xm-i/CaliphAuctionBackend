@@ -29,6 +29,7 @@ public class AutoBidWorker(
 			// 最新状態取得
 			var initial = await db.AuctionItems
 				.Include(x => x.CurrentHighestBidUser)
+				.ThenInclude(x => x!.PointPurchases)
 				.AsNoTracking()
 				.Where(x => x.Id == this._auctionItemId)
 				.FirstOrDefaultAsync(ct);
@@ -43,8 +44,9 @@ public class AutoBidWorker(
 				return;
 			}
 
-			//　最低価格に達していれば終了処理へ
-			if (initial.CurrentPrice >= initial.MinimumPrice) {
+			//　価格+入札済みコストが最低価格に達していて、且つ過去にポイント購入したことのあるユーザーの場合は終了処理へ
+			if (initial.CurrentPrice + initial.TotalBidCost >= initial.MinimumPrice &&
+			    (initial.CurrentHighestBidUser?.PointPurchases.Count ?? 0) > 0) {
 				await this.FinalizeAsync(scope, db, initial, ct);
 				return;
 			}

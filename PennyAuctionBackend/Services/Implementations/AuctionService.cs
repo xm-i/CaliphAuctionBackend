@@ -158,9 +158,10 @@ public class AuctionService(PennyDbContext dbContext, IConfiguration configurati
 			BidAmount = request.BidAmount,
 			BidTime = DateTime.UtcNow
 		};
-		// BOTでなければポイント消費
+		// BOTでなければポイント消費し、トータルコスト積み上げ
 		if (!user.IsBotUser) {
-			await this.ConsumeBidPointsAsync(user, bid, item.BidPointCost);
+			var totalCost = await this.ConsumeBidPointsAsync(user, bid, item.BidPointCost);
+			item.TotalBidCost += totalCost;
 		}
 
 		this._db.Bids.Add(bid);
@@ -201,7 +202,8 @@ public class AuctionService(PennyDbContext dbContext, IConfiguration configurati
 	/// <param name="user">入札ユーザー</param>
 	/// <param name="bid">入札エンティティ</param>
 	/// <param name="perBidCost">消費ポイント</param>
-	private async Task ConsumeBidPointsAsync(User user, Bid bid, int perBidCost) {
+	/// <returns>消費コインに対応する利用金額</returns>
+	private async Task<int> ConsumeBidPointsAsync(User user, Bid bid, int perBidCost) {
 		if (user.PointBalance < perBidCost) {
 			throw new ValidationPennyException("Insufficient points.");
 		}
@@ -237,5 +239,7 @@ public class AuctionService(PennyDbContext dbContext, IConfiguration configurati
 			Entries = entries
 		};
 		this._db.PointTransactions.Add(spendTx);
+
+		return entries.Sum(x => x.TotalPrice);
 	}
 }
