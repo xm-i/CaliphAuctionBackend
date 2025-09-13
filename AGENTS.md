@@ -1,0 +1,3 @@
+ - Always add documentation comments to classes, methods, and properties, even without explicit instructions.
+ - Do not add other comments unless explicitly instructed.
+ - Follow the .editorconfig settings.
