@@ -85,6 +85,6 @@ public class MyPageService(PennyDbContext db) : IMyPageService {
 			})
 			.ToListAsync();
 
-		return new() { Items = items, TotalCount = total };
+		return new() { Items = items, TotalCount = total, ServerTimeUtc = DateTime.UtcNow };
 	}
 }

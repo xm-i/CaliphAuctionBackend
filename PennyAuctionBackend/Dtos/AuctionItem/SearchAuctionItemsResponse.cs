@@ -10,4 +10,9 @@ public class SearchAuctionItemsResponse {
 		get;
 		set;
 	}
+
+	public DateTime ServerTimeUtc {
+		get;
+		set;
+	}
 }

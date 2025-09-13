@@ -88,6 +88,10 @@ public class AuctionItemDetailDto {
 		set;
 	}
 
+	public DateTime ServerTimeUtc {
+		get;
+		set;
+	}
 
 	public IReadOnlyList<BidHistoryDto> BidHistories {
 		get;

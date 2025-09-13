@@ -56,7 +56,7 @@ public class AuctionService(PennyDbContext dbContext, IConfiguration configurati
 			})
 			.ToListAsync();
 
-		return new() { Items = items, TotalCount = total };
+		return new() { Items = items, TotalCount = total, ServerTimeUtc = DateTime.UtcNow };
 	}
 
 	public async Task<IReadOnlyList<CategoryDto>> GetCategoriesAsync() {
@@ -101,7 +101,8 @@ public class AuctionService(PennyDbContext dbContext, IConfiguration configurati
 					.OrderByDescending(b => b.BidTime)
 					.Select(b => new BidHistoryDto { UserId = b.UserId, Username = b.User.Username, BidAmount = b.BidAmount, BidTime = b.BidTime })
 					.Take(20)
-					.ToList()
+					.ToList(),
+				ServerTimeUtc = DateTime.UtcNow
 			})
 			.FirstOrDefaultAsync();
 
