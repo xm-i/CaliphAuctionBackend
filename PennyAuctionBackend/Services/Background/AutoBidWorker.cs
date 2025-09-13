@@ -28,6 +28,7 @@ public class AutoBidWorker(
 
 			// 最新状態取得
 			var initial = await db.AuctionItems
+				.Include(x => x.CurrentHighestBidUser)
 				.AsNoTracking()
 				.Where(x => x.Id == this._auctionItemId)
 				.FirstOrDefaultAsync(ct);
@@ -45,9 +46,16 @@ public class AutoBidWorker(
 			//　最低価格に達していれば終了処理へ
 			if (initial.CurrentPrice >= initial.MinimumPrice) {
 				await this.FinalizeAsync(scope, db, initial, ct);
-			} else {
-				await this.BotBidAsync(scope, initial, ct);
+				return;
 			}
+
+			// 最低価格に到達していなくてもBOTが最高入札者なら一定確率で終了
+			if (initial.CurrentHighestBidUser?.IsBotUser == true && new Random().NextDouble() < 0.1) {
+				await this.FinalizeAsync(scope, db, initial, ct);
+				return;
+			}
+
+			await this.BotBidAsync(scope, initial, ct);
 		} catch (OperationCanceledException) {
 			// 正常停止
 		} catch (Exception ex) {
@@ -122,7 +130,7 @@ public class AutoBidWorker(
 
 		// 落札ユーザー通知 (ユーザーが存在する場合のみ)
 		if (latest.CurrentHighestBidUserId.HasValue) {
-			db.Notifications.Add(new Notification {
+			db.Notifications.Add(new() {
 				UserId = latest.CurrentHighestBidUserId.Value,
 				Category = "bidWin",
 				Title = "落札おめでとうございます",
