@@ -92,7 +92,7 @@ public class AutoBidWorker(
 		}
 
 		try {
-			await auctionService.PlaceBidAsync(botUserId.Value, new() { AuctionItemId = this._auctionItemId, BidAmount = initial.CurrentPrice + initial.BidIncrement });
+			await auctionService.PlaceBidAsync(botUserId.Value, new() { AuctionItemId = this._auctionItemId, BidAmount = initial.CurrentPrice + initial.BidIncrement }, "AUTO_BOT");
 		} catch (ValidationPennyException ex) {
 			this._logger.LogDebug(ex, "Validation during autobid for Item {ItemId}", this._auctionItemId);
 		} catch (Exception ex) {

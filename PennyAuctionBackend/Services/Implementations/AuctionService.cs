@@ -18,9 +18,10 @@ namespace PennyAuctionBackend.Services.Implementations;
 ///     カテゴリ別のアイテム検索など、クエリ機能を提供します。
 /// </summary>
 [AddScoped]
-public class AuctionService(PennyDbContext dbContext, IConfiguration configuration, IHubContext<AuctionHub, IAuctionClient> hubContext) : IAuctionService {
+public class AuctionService(PennyDbContext dbContext, IConfiguration configuration, IHubContext<AuctionHub, IAuctionClient> hubContext, IHttpContextAccessor httpContextAccessor) : IAuctionService {
 	private readonly IConfiguration _configuration = configuration;
 	private readonly PennyDbContext _db = dbContext;
+	private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
 	private readonly IHubContext<AuctionHub, IAuctionClient> _hub = hubContext;
 
 	/// <inheritdoc />
@@ -114,7 +115,7 @@ public class AuctionService(PennyDbContext dbContext, IConfiguration configurati
 	/// <summary>
 	///     入札を行い、ポイントを消費する。
 	/// </summary>
-	public async Task PlaceBidAsync(int userId, PlaceBidRequest request) {
+	public async Task PlaceBidAsync(int userId, PlaceBidRequest request, string ipAddress) {
 		await using var transaction = await this._db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted);
 
 		// アイテム行ロック
@@ -156,7 +157,8 @@ public class AuctionService(PennyDbContext dbContext, IConfiguration configurati
 			AuctionItem = item,
 			UserId = userId,
 			BidAmount = request.BidAmount,
-			BidTime = DateTime.UtcNow
+			BidTime = DateTime.UtcNow,
+			IpAddress = ipAddress
 		};
 		// BOTでなければポイント消費し、トータルコスト積み上げ
 		if (!user.IsBotUser) {
@@ -165,7 +167,6 @@ public class AuctionService(PennyDbContext dbContext, IConfiguration configurati
 		}
 
 		this._db.Bids.Add(bid);
-
 
 		// 残り時間の延長判定
 		var nullableMinimumEndTimeSeconds = this._configuration.GetValue<int?>("Auction:MinimumEndTimeSeconds", null);

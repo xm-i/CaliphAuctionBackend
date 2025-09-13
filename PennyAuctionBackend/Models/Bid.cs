@@ -49,4 +49,11 @@ public class Bid : BaseEntity {
 		get;
 		set;
 	}
+
+	[MaxLength(45)]
+	[Required]
+	public string? IpAddress {
+		get;
+		set;
+	}
 }

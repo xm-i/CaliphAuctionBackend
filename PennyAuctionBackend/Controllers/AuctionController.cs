@@ -35,12 +35,13 @@ public class AuctionController(IAuctionService auctionService) : ControllerBase 
 	[HttpPost("place-bid")]
 	[Authorize]
 	public async Task<IActionResult> PlaceBidAsync([FromBody] PlaceBidRequest request) {
+		var ipAddress = this.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "0.0.0.0";
 		var userIdClaim = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 		if (!int.TryParse(userIdClaim, out var userId)) {
 			return this.Unauthorized();
 		}
 
-		await this._auctionService.PlaceBidAsync(userId, request);
+		await this._auctionService.PlaceBidAsync(userId, request, ipAddress);
 		return this.NoContent();
 	}
 }

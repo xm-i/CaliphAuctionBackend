@@ -38,6 +38,7 @@ public static class Program {
 		builder.Services.AddControllers();
 		builder.Services.AddSignalR();
 		builder.Services.AddOpenApi();
+		builder.Services.AddHttpContextAccessor();
 		builder.Services.AddDbContext<PennyDbContext>(options =>
 			options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")!));
 
