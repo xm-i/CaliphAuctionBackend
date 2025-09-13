@@ -99,6 +99,7 @@ public class AuctionService(PennyDbContext dbContext, IConfiguration configurati
 				BidHistories = x.Bids
 					.OrderByDescending(b => b.BidTime)
 					.Select(b => new BidHistoryDto { UserId = b.UserId, Username = b.User.Username, BidAmount = b.BidAmount, BidTime = b.BidTime })
+					.Take(20)
 					.ToList()
 			})
 			.FirstOrDefaultAsync();
