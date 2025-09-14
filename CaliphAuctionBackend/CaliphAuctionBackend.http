@@ -1,0 +1,6 @@
+@CaliphAuctionBackend_HostAddress = http://localhost:5018
+
+GET {{CaliphAuctionBackend_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
