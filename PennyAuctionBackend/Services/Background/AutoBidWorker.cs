@@ -152,7 +152,7 @@ public class AutoBidWorker(
 			WinnerUserId = (int)latest.CurrentHighestBidUserId!
 		};
 
-		await hub.Clients.Group(AuctionHub.BuildGroupName(latest.Id)).ReceiveAuctionClosed(dto);
+		await hub.Clients.All.ReceiveAuctionClosed(dto);
 		this._logger.LogInformation("Auction {ItemId} closed, notification created and clients notified.", latest.Id);
 	}
 
