@@ -1,0 +1,136 @@
+name: Build-Publish
+
+on:
+  push:
+    tags:
+      - '*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dotnet: [ '10.0.x' ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ matrix.dotnet }}
+          include-prerelease: true
+          cache: true
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore /warnaserror
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: production
+    outputs:
+      artifact-name: app-publish
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+            dotnet-version: '10.0.x'
+            include-prerelease: true
+            cache: true
+
+      - name: Create appsettings.Production.json from Secrets/Env
+        env:
+          CORS_ALLOWED_ORIGINS: ${{ vars.CORS_ALLOWED_ORIGINS }}
+          DB_CONNECTION: ${{ secrets.DB_CONNECTION }}
+          JWT_KEY: ${{ secrets.JWT_KEY }}
+          EXTERNAL_JWT_KEY: ${{ secrets.EXTERNAL_JWT_KEY }}
+        run: |
+          set -euo pipefail
+          for v in CORS_ALLOWED_ORIGINS DB_CONNECTION JWT_KEY EXTERNAL_JWT_KEY; do
+            if [ -z "${!v:-}" ]; then echo "Missing required secret/var: $v" >&2; exit 1; fi
+          done
+
+          IFS=',' read -ra ORIGINS_ARR <<< "$CORS_ALLOWED_ORIGINS"
+          ORIGINS_JSON=$(printf '"%s",' "${ORIGINS_ARR[@]}"); ORIGINS_JSON="[${ORIGINS_JSON%,}]"
+
+          cat > CaliphAuctionBackend/appsettings.Production.json <<EOF
+          {
+            "Logging": {
+              "LogLevel": {
+                "Default": "Information",
+                "Microsoft.AspNetCore": "Warning",
+                "Microsoft.EntityFrameworkCore": "Warning",
+                "Microsoft.EntityFrameworkCore.Database.Command": "Warning"
+              }
+            },
+            "AllowedHosts": "*",
+            "Cors": { "AllowedOrigins": $ORIGINS_JSON },
+            "ConnectionStrings": { "DefaultConnection": "${DB_CONNECTION//"/\"}" },
+            "Jwt": { "Key": "${JWT_KEY//"/\"}", "Issuer": "CaliphAuctionBackend", "ExpireMinutes": 14400 },
+            "ExternalPaymentJwt": { "Key": "${EXTERNAL_JWT_KEY//"/\"}", "Issuer": "ExternalPaymentService", "ExpireMinutes": 5 },
+            "Points": { "RegistrationBonus": 5000 },
+            "Auction": { "MinimumEndTimeSeconds": 30, "ActiveTargetCount": 50, "TopUpIntervalSeconds": 30 },
+            "AutoBid": { "DiscoveryIntervalSeconds": 10 }
+          }
+          EOF
+
+      - name: Publish
+        env:
+          ASPNETCORE_ENVIRONMENT: Production
+        run: dotnet publish CaliphAuctionBackend/CaliphAuctionBackend.csproj -c Release -o out /p:UseAppHost=false
+
+      - name: Archive artifact (no secrets in plain text besides generated config)
+        run: tar -czf app.tar.gz -C out .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-publish
+          path: app.tar.gz
+
+  deploy:
+    needs: publish
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      DEPLOY_USER: ubuntu
+      DEPLOY_HOST: caliphauction.com
+      DEPLOY_PATH: /opt/caliph-auction
+      DEPLOY_PORT: 30532
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-publish
+          path: dist
+
+      - name: Prepare SSH key
+        env:
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+        run: |
+          set -euo pipefail
+          [ -n "${SSH_KEY:-}" ] || { echo 'Missing secret SSH_KEY' >&2; exit 1; }
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          printf "Host target\n  HostName %s\n  User %s\n  Port %s\n  StrictHostKeyChecking accept-new\n" "$DEPLOY_HOST" "$DEPLOY_USER" "$DEPLOY_PORT" >> ~/.ssh/config
+
+      - name: Upload & Deploy
+        run: |
+          set -euo pipefail
+          ls -l dist
+          scp -P "$DEPLOY_PORT" dist/app.tar.gz target:/tmp/app.tar.gz
+          ssh target "sudo mkdir -p $DEPLOY_PATH/releases && ts=\$(date +%Y%m%d%H%M%S) && mkdir $DEPLOY_PATH/releases/\$ts && tar -xzf /tmp/app.tar.gz -C $DEPLOY_PATH/releases/\$ts && ln -sfn $DEPLOY_PATH/releases/\$ts $DEPLOY_PATH/current && rm /tmp/app.tar.gz"
+
+# Required secrets: DB_CONNECTION, JWT_KEY, EXTERNAL_JWT_KEY, SSH_KEY
+# GitHub Environment variable: CORS_ALLOWED_ORIGINS
