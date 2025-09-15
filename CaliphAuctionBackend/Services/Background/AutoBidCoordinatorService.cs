@@ -82,7 +82,7 @@ public class AutoBidCoordinatorService(
 			var task = Task.Run(() => worker.RunAsync(linkedCts.Token), linkedCts.Token);
 			this._workers[itemId] = (linkedCts, task);
 
-			this._logger.LogInformation("AutoBidWorker launched for Item {ItemId}", itemId);
+			this._logger.LogDebug("AutoBidWorker launched for Item {ItemId}", itemId);
 		}
 
 		// 終了すべきワーカー（候補外）を停止

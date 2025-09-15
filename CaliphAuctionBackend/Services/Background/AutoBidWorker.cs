@@ -20,7 +20,7 @@ public class AutoBidWorker(
 	private readonly IServiceScopeFactory _scopeFactory = scopeFactory;
 
 	public async Task RunAsync(CancellationToken ct) {
-		this._logger.LogInformation("AutoBidWorker started for Item {ItemId}", this._auctionItemId);
+		this._logger.LogDebug("AutoBidWorker started for Item {ItemId}", this._auctionItemId);
 
 		try {
 			using var scope = this._scopeFactory.CreateScope();
@@ -35,12 +35,12 @@ public class AutoBidWorker(
 				.FirstOrDefaultAsync(ct);
 
 			if (initial is null) {
-				this._logger.LogInformation("Item {ItemId} no longer exists. Stop worker.", this._auctionItemId);
+				this._logger.LogDebug("Item {ItemId} no longer exists. Stop worker.", this._auctionItemId);
 				return;
 			}
 
 			if (initial.Status != AuctionStatus.Active) {
-				this._logger.LogInformation("Item {ItemId} not active. Stop worker.", this._auctionItemId);
+				this._logger.LogDebug("Item {ItemId} not active. Stop worker.", this._auctionItemId);
 				return;
 			}
 
@@ -63,7 +63,10 @@ public class AutoBidWorker(
 		} catch (Exception ex) {
 			this._logger.LogError(ex, "AutoBidWorker error for Item {ItemId}", this._auctionItemId);
 		} finally {
-			this._logger.LogInformation("AutoBidWorker stopped for Item {ItemId}", this._auctionItemId);
+			this._logger.LogDebug("AutoBidWorker stopped for Item {ItemId}", this._auctionItemId);
+		}
+	}
+
 	/// <summary>
 	///     BOT即時入札
 	/// </summary>

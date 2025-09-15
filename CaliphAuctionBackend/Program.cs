@@ -28,7 +28,7 @@ public static class Program {
 		app.UseHttpsRedirection();
 
 		app.UseForwardedHeaders();
-
+		app.UseMiddleware<RequestLoggingMiddleware>();
 		app.UseCors("DefaultCorsPolicy");
 		app.UseMiddleware<CaliphExceptionHandlingMiddleware>();
 		app.UseAuthentication();
