@@ -8,6 +8,7 @@ using CaliphAuctionBackend.Hubs;
 using CaliphAuctionBackend.Services.Background;
 using CaliphAuctionBackend.Services.Infrastructure;
 using CaliphAuctionBackend.Utils.Attributes;
+using CaliphAuctionBackend.Middleware;
 
 namespace CaliphAuctionBackend;
 
@@ -23,6 +24,7 @@ public static class Program {
 
 		app.UseHttpsRedirection();
 		app.UseCors("DefaultCorsPolicy");
+		app.UseMiddleware<CaliphExceptionHandlingMiddleware>();
 		app.UseAuthentication();
 		app.UseAuthorization();
 
