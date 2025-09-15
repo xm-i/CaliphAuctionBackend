@@ -1,7 +1,5 @@
 using System.Data;
 using System.Net;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
 using CaliphAuctionBackend.Data;
 using CaliphAuctionBackend.Dtos.AuctionItem;
 using CaliphAuctionBackend.Dtos.Realtime;
@@ -10,6 +8,8 @@ using CaliphAuctionBackend.Hubs;
 using CaliphAuctionBackend.Models;
 using CaliphAuctionBackend.Services.Interfaces;
 using CaliphAuctionBackend.Utils.Attributes;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 
 namespace CaliphAuctionBackend.Services.Implementations;
 
@@ -25,7 +25,7 @@ public class AuctionService(CaliphDbContext dbContext, IConfiguration configurat
 	private readonly IHubContext<AuctionHub, IAuctionClient> _hub = hubContext;
 
 	/// <inheritdoc />
-	public async Task<SearchAuctionItemsResponse> SearchAsync(int? categoryId) {
+	public async Task<SearchAuctionItemsResponse> SearchAsync(int limit, int? categoryId) {
 		var baseQuery = this._db.AuctionItems
 			.AsNoTracking()
 			.Where(x => x.Status == AuctionStatus.Active);
@@ -39,7 +39,7 @@ public class AuctionService(CaliphDbContext dbContext, IConfiguration configurat
 		var items = await baseQuery
 			.Include(x => x.CurrentHighestBidUser)
 			.OrderBy(x => x.EndTime)
-			.Take(10)
+			.Take(limit)
 			.Select(x => new AuctionItemSummaryDto {
 				Id = x.Id,
 				Name = x.Name,

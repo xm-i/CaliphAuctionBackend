@@ -1,8 +1,8 @@
 using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using CaliphAuctionBackend.Dtos.AuctionItem;
 using CaliphAuctionBackend.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CaliphAuctionBackend.Controllers;
 
@@ -13,8 +13,8 @@ public class AuctionController(IAuctionService auctionService) : ControllerBase 
 
 	[HttpGet("search")]
 	[AllowAnonymous]
-	public async Task<ActionResult<SearchAuctionItemsResponse>> SearchAsync([FromQuery] int? categoryId) {
-		var result = await this._auctionService.SearchAsync(categoryId);
+	public async Task<ActionResult<SearchAuctionItemsResponse>> SearchAsync([FromQuery] int limit, int? categoryId) {
+		var result = await this._auctionService.SearchAsync(limit, categoryId);
 		return this.Ok(result);
 	}
 
