@@ -54,6 +54,7 @@ jobs:
           DB_CONNECTION: ${{ secrets.DB_CONNECTION }}
           JWT_KEY: ${{ secrets.JWT_KEY }}
           EXTERNAL_JWT_KEY: ${{ secrets.EXTERNAL_JWT_KEY }}
+          PASSWORD_PEPPER: ${{ secrets.PASSWORD_PEPPER }}
         run: |
           set -euo pipefail
           for v in CORS_ALLOWED_ORIGINS DB_CONNECTION JWT_KEY EXTERNAL_JWT_KEY; do
@@ -80,7 +81,8 @@ jobs:
             "ExternalPaymentJwt": { "Key": "${EXTERNAL_JWT_KEY//"/\"}", "Issuer": "ExternalPaymentService", "ExpireMinutes": 5 },
             "Points": { "RegistrationBonus": 5000 },
             "Auction": { "MinimumEndTimeSeconds": 30, "ActiveTargetCount": 50, "TopUpIntervalSeconds": 30 },
-            "AutoBid": { "DiscoveryIntervalSeconds": 10 }
+            "AutoBid": { "DiscoveryIntervalSeconds": 10 },
+            "Security": { "PasswordPepper": "${PASSWORD_PEPPER//"/\"}" }
           }
           EOF
 

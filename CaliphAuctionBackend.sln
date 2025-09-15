@@ -12,6 +12,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionIt
 		.gitignore = .gitignore
 		.gitmodules = .gitmodules
 		AGENTS.md = AGENTS.md
+		.github\workflows\build-publish.yml = .github\workflows\build-publish.yml
 		CaliphAuctionBackend.sln.DotSettings = CaliphAuctionBackend.sln.DotSettings
 		Directory.Build.props = Directory.Build.props
 		README.md = README.md

@@ -13,6 +13,12 @@ namespace CaliphAuctionBackend.Services.Implementations {
 		private readonly IConfiguration _configuration = configuration;
 		private readonly CaliphDbContext _dbContext = dbContext;
 
+		private string Pepper {
+			get {
+				return this._configuration["Security:PasswordPepper"] ?? throw new ConfigurationCaliphException("Pepper configuration is missing.");
+			}
+		}
+
 		/// <summary>
 		///     新しいユーザーを登録する
 		/// </summary>
@@ -24,7 +30,7 @@ namespace CaliphAuctionBackend.Services.Implementations {
 			await this.ValidateAsync(registerUserDto);
 
 			var salt = SecurityUtils.GenerateSalt();
-			var hashedPassword = SecurityUtils.HashPassword(registerUserDto.Password, salt);
+			var hashedPassword = SecurityUtils.HashPassword(registerUserDto.Password, salt, this.Pepper);
 			var nullableRegistrationBonusPoints = this._configuration.GetValue<int?>("Points:RegistrationBonus");
 			if (nullableRegistrationBonusPoints is not { } registrationBonusPoints) {
 				throw new ConfigurationCaliphException("Registration bonus points configuration is missing.");
@@ -107,7 +113,7 @@ namespace CaliphAuctionBackend.Services.Implementations {
 			}
 
 			try {
-				var hashedInput = SecurityUtils.HashPassword(loginDto.Password, user.PasswordSalt);
+				var hashedInput = SecurityUtils.HashPassword(loginDto.Password, user.PasswordSalt, this.Pepper);
 
 				if (hashedInput != user.PasswordHash) {
 					throw new AuthenticationFailedCaliphException("Invalid email or password.");

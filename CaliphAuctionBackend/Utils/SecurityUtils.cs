@@ -7,10 +7,11 @@ using Microsoft.IdentityModel.Tokens;
 namespace CaliphAuctionBackend.Utils;
 
 public static class SecurityUtils {
-	public static string HashPassword(string password, string salt) {
+	public static string HashPassword(string password, string salt, string pepper) {
+		var combined = password + pepper;
 		var saltBytes = Convert.FromBase64String(salt);
 		var hashBytes = Rfc2898DeriveBytes.Pbkdf2(
-			password,
+			combined,
 			saltBytes,
 			100_000,
 			HashAlgorithmName.SHA256,
