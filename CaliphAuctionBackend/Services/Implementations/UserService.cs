@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using CaliphAuctionBackend.Data;
 using CaliphAuctionBackend.Dtos.User;
 using CaliphAuctionBackend.Exceptions;
@@ -6,6 +5,7 @@ using CaliphAuctionBackend.Models;
 using CaliphAuctionBackend.Services.Interfaces;
 using CaliphAuctionBackend.Utils;
 using CaliphAuctionBackend.Utils.Attributes;
+using Microsoft.EntityFrameworkCore;
 
 namespace CaliphAuctionBackend.Services.Implementations {
 	[AddScoped]
@@ -51,8 +51,6 @@ namespace CaliphAuctionBackend.Services.Implementations {
 			if (registrationBonusPoints > 0) {
 				var lot = new PointBalanceLot { UserId = user.Id, UnitPrice = 0m, QuantityRemaining = registrationBonusPoints };
 				this._dbContext.PointBalanceLots.Add(lot);
-
-				user.PointBalance += registrationBonusPoints;
 
 				var pointTransaction = new PointTransaction {
 					UserId = user.Id,
