@@ -1,14 +1,17 @@
+using System.Net;
 using System.Reflection;
 using System.Text;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using CaliphAuctionBackend.Data;
 using CaliphAuctionBackend.Hubs;
+using CaliphAuctionBackend.Middleware;
 using CaliphAuctionBackend.Services.Background;
 using CaliphAuctionBackend.Services.Infrastructure;
 using CaliphAuctionBackend.Utils.Attributes;
-using CaliphAuctionBackend.Middleware;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+// added for forwarded headers
 
 namespace CaliphAuctionBackend;
 
@@ -23,6 +26,9 @@ public static class Program {
 		}
 
 		app.UseHttpsRedirection();
+
+		app.UseForwardedHeaders();
+
 		app.UseCors("DefaultCorsPolicy");
 		app.UseMiddleware<CaliphExceptionHandlingMiddleware>();
 		app.UseAuthentication();
@@ -43,6 +49,12 @@ public static class Program {
 		builder.Services.AddHttpContextAccessor();
 		builder.Services.AddDbContext<CaliphDbContext>(options =>
 			options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")!));
+
+		builder.Services.Configure<ForwardedHeadersOptions>(options => {
+			options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+			options.KnownProxies.Add(IPAddress.Parse("127.0.0.1"));
+			options.ForwardLimit = 1;
+		});
 
 		RegisterServices(builder.Services);
 
