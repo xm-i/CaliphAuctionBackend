@@ -11,7 +11,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-// added for forwarded headers
 
 namespace CaliphAuctionBackend;
 
@@ -26,13 +25,14 @@ public static class Program {
 		}
 
 		app.UseHttpsRedirection();
-
 		app.UseForwardedHeaders();
-		app.UseMiddleware<RequestLoggingMiddleware>();
 		app.UseCors("DefaultCorsPolicy");
-		app.UseMiddleware<CaliphExceptionHandlingMiddleware>();
+
 		app.UseAuthentication();
 		app.UseAuthorization();
+
+		app.UseMiddleware<RequestLoggingMiddleware>();
+		app.UseMiddleware<CaliphExceptionHandlingMiddleware>();
 
 		app.MapControllers();
 		app.MapHub<AuctionHub>("/auctionHub");
