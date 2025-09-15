@@ -1,6 +1,4 @@
 using System.Data;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
 using CaliphAuctionBackend.Data;
 using CaliphAuctionBackend.Dtos.Realtime;
 using CaliphAuctionBackend.Exceptions;
@@ -8,6 +6,8 @@ using CaliphAuctionBackend.Hubs;
 using CaliphAuctionBackend.Models;
 using CaliphAuctionBackend.Services.Infrastructure;
 using CaliphAuctionBackend.Services.Interfaces;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 
 namespace CaliphAuctionBackend.Services.Background;
 
@@ -64,6 +64,44 @@ public class AutoBidWorker(
 			this._logger.LogError(ex, "AutoBidWorker error for Item {ItemId}", this._auctionItemId);
 		} finally {
 			this._logger.LogInformation("AutoBidWorker stopped for Item {ItemId}", this._auctionItemId);
+	/// <summary>
+	///     BOT即時入札
+	/// </summary>
+	/// <param name="ct"></param>
+	public async Task BotBidImmediatelyAsync(CancellationToken ct) {
+		this._logger.LogDebug("Immediate autobid requested for Item {ItemId}", this._auctionItemId);
+		try {
+			using var scope = this._scopeFactory.CreateScope();
+			var db = scope.ServiceProvider.GetRequiredService<CaliphDbContext>();
+			var auctionService = scope.ServiceProvider.GetRequiredService<IAuctionService>();
+
+			var item = await db.AuctionItems.AsNoTracking().FirstOrDefaultAsync(x => x.Id == this._auctionItemId, ct);
+			if (item is null) {
+				this._logger.LogWarning("Immediate autobid: item {ItemId} not found", this._auctionItemId);
+				return;
+			}
+
+			if (item.Status != AuctionStatus.Active) {
+				this._logger.LogDebug("Immediate autobid: item {ItemId} not active", this._auctionItemId);
+				return;
+			}
+
+			var botUserId = BotUserCache.GetRandomBotUserId(item.CurrentHighestBidUserId);
+			if (botUserId is null) {
+				this._logger.LogWarning("Immediate autobid: no bot user available for {ItemId}", this._auctionItemId);
+				return;
+			}
+
+			try {
+				await auctionService.PlaceBidAsync(botUserId.Value, new() { AuctionItemId = this._auctionItemId, BidAmount = item.CurrentPrice + item.BidIncrement }, "AUTO_BOT_IMMEDIATE");
+				this._logger.LogDebug("Immediate autobid placed by BotUser {UserId} on Item {ItemId}", botUserId.Value, this._auctionItemId);
+			} catch (ValidationCaliphException ex) {
+				this._logger.LogDebug(ex, "Immediate autobid validation issue for Item {ItemId}", this._auctionItemId);
+			} catch (Exception ex) {
+				this._logger.LogError(ex, "Immediate autobid unexpected error for Item {ItemId}", this._auctionItemId);
+			}
+		} catch (OperationCanceledException) {
+			// ignore
 		}
 	}
 

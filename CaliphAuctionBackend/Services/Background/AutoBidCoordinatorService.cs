@@ -1,7 +1,7 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using CaliphAuctionBackend.Data;
 using CaliphAuctionBackend.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace CaliphAuctionBackend.Services.Background;
 
@@ -98,5 +98,27 @@ public class AutoBidCoordinatorService(
 				// ignore
 			}
 		}
+
+		// 即時入札要求
+		await this.BotBidImmediatelyRandomAsync(scope, db, ct);
+	}
+
+	private async Task BotBidImmediatelyRandomAsync(IServiceScope scope, CaliphDbContext db, CancellationToken ct) {
+		var nullableImmediatelyBidTarget = await db.AuctionItems
+			.AsNoTracking()
+			.Where(x =>
+				x.Status == AuctionStatus.Active &&
+				x.EndTime > DateTime.UtcNow.AddSeconds(-this._options.DiscoveryIntervalSeconds * 10))
+			.Select(x => x.Id as int?)
+			.OrderBy(x => EF.Functions.Random())
+			.FirstOrDefaultAsync(ct);
+		if (nullableImmediatelyBidTarget is not { } immediatelyBidTarget) {
+			return;
+		}
+
+		var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+		var workerLogger = scope.ServiceProvider.GetRequiredService<ILogger<AutoBidWorker>>();
+		var worker = new AutoBidWorker(immediatelyBidTarget, this._scopeFactory, workerLogger);
+		await worker.BotBidImmediatelyAsync(linkedCts.Token);
 	}
 }
