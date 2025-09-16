@@ -52,7 +52,7 @@ public class AutoBidWorker(
 			}
 
 			// 最低価格に到達していなくてもBOTが最高入札者なら一定確率で終了
-			if (initial.CurrentHighestBidUser?.IsBotUser == true && new Random().NextDouble() < 0.1) {
+			if (initial.CurrentHighestBidUser?.IsBotUser == true && new Random().NextDouble() < 0.05) {
 				await this.FinalizeAsync(scope, db, initial, ct);
 				return;
 			}
