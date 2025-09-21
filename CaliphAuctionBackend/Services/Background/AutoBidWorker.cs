@@ -117,7 +117,7 @@ public class AutoBidWorker(
 	private async Task BotBidAsync(IServiceScope scope, AuctionItem initial, CancellationToken ct) {
 		var auctionService = scope.ServiceProvider.GetRequiredService<IAuctionService>();
 		// 次回入札タイミングを決定して待機
-		var slackSec = Random.Shared.Next(5, 20);
+		var slackSec = Random.Shared.Next(2, 30);
 		var targetAt = initial.EndTime.AddSeconds(-slackSec);
 		var now = DateTime.UtcNow;
 		if (targetAt > now) {

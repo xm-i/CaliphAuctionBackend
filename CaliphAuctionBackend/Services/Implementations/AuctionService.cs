@@ -179,7 +179,8 @@ public class AuctionService(CaliphDbContext dbContext, IConfiguration configurat
 		item.CurrentPrice = request.BidAmount;
 		item.CurrentHighestBidUserId = userId;
 		if (item.EndTime < minimumEndTime) {
-			item.EndTime = minimumEndTime;
+			var span = (item.EndTime - DateTime.UtcNow) / 2;
+			item.EndTime = minimumEndTime.Add(span);
 		}
 
 		await this._db.SaveChangesAsync();
