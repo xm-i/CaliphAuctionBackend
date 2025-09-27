@@ -6,6 +6,7 @@ using CaliphAuctionBackend.Hubs;
 using CaliphAuctionBackend.Models;
 using CaliphAuctionBackend.Services.Infrastructure;
 using CaliphAuctionBackend.Services.Interfaces;
+using CaliphAuctionBackend.Utils;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,6 +16,7 @@ public class AutoBidWorker(
 	int auctionItemId,
 	IServiceScopeFactory scopeFactory,
 	ILogger<AutoBidWorker> logger) {
+	private static readonly Dictionary<long, List<int>> _botUsersList = [];
 	private readonly int _auctionItemId = auctionItemId;
 	private readonly ILogger<AutoBidWorker> _logger = logger;
 	private readonly IServiceScopeFactory _scopeFactory = scopeFactory;
@@ -52,7 +54,7 @@ public class AutoBidWorker(
 			}
 
 			// 最低価格に到達していなくてもBOTが最高入札者なら一定確率で終了
-			if (initial.CurrentHighestBidUser?.IsBotUser == true && new Random().NextDouble() < 0.08) {
+			if (initial.CurrentHighestBidUser?.IsBotUser == true && MathUtils.Chance(0.08)) {
 				await this.FinalizeAsync(scope, db, initial, ct);
 				return;
 			}
@@ -125,21 +127,99 @@ public class AutoBidWorker(
 			await Task.Delay(delay, ct);
 		}
 
-		// Botユーザー選定（現最高入札者は除外）
-		var botUserId = BotUserCache.GetRandomBotUserId(initial.CurrentHighestBidUserId);
-		if (botUserId is null) {
+		var nullableBotUserId = this.PickBotUser(initial);
+		if (nullableBotUserId is not { } botUserId) {
 			this._logger.LogWarning("No available bot users for Item {ItemId}", this._auctionItemId);
 			return;
 		}
 
 		try {
-			await auctionService.PlaceBidAsync(botUserId.Value, new() { AuctionItemId = this._auctionItemId, BidAmount = initial.CurrentPrice + initial.BidIncrement }, "AUTO_BOT");
+			await auctionService.PlaceBidAsync(botUserId, new() { AuctionItemId = this._auctionItemId, BidAmount = initial.CurrentPrice + initial.BidIncrement }, "AUTO_BOT");
 		} catch (ValidationCaliphException ex) {
 			this._logger.LogDebug(ex, "Validation during autobid for Item {ItemId}", this._auctionItemId);
 		} catch (Exception ex) {
 			this._logger.LogError(ex, "Unexpected error during autobid for Item {ItemId}", this._auctionItemId);
 		}
 	}
+
+	/// <summary>
+	///     BOTユーザーの選定
+	/// </summary>
+	/// <param name="item">オークション商品ID</param>
+	/// <returns>ユーザーID</returns>
+	private int? PickBotUser(AuctionItem item) {
+		if (!_botUsersList.ContainsKey(item.Id)) {
+			_botUsersList.Add(item.Id, []);
+		}
+
+		var botUsers = _botUsersList[item.Id];
+
+		var addProbabilityByBotUsersCount = new Dictionary<int, double> {
+			[0] = 1,
+			[1] = 0.2,
+			[2] = 0.2,
+			[3] = 0.07,
+			[4] = 0.03,
+			[5] = 0.01,
+			[6] = 0.01
+		};
+
+		var removeProbabilityByBotUsersCount = new Dictionary<int, double> {
+			[0] = 0,
+			[1] = 0,
+			[2] = 0.08,
+			[3] = 0.1,
+			[4] = 0.5,
+			[5] = 0.7,
+			[6] = 0.9
+		};
+
+		if (botUsers.Count == 1 && botUsers[0] == item.CurrentHighestBidUserId) {
+			// BOTユーザー数が1で、最高入札者がBOTならもう一人追加
+
+			var nullableBotUserId = BotUserCache.GetRandomBotUserId(item.CurrentHighestBidUserId);
+			if (nullableBotUserId is { } botUserId) {
+				botUsers.Add(botUserId);
+			}
+
+			return nullableBotUserId;
+		}
+
+		// 確率に基づき入札中BOTユーザーの増減
+		if (MathUtils.Chance(addProbabilityByBotUsersCount.GetValueOrDefault(botUsers.Count, 0))) {
+			// BOTユーザー追加
+
+			var nullableBotUserId = BotUserCache.GetRandomBotUserId(item.CurrentHighestBidUserId);
+			if (nullableBotUserId is { } botUserId) {
+				botUsers.Add(botUserId);
+			}
+
+			return nullableBotUserId;
+		}
+
+		if (MathUtils.Chance(removeProbabilityByBotUsersCount.GetValueOrDefault(botUsers.Count, 1))) {
+			var userId = GetRandomBotUserId(botUsers, item.CurrentHighestBidUserId);
+
+			// BOTユーザー削除
+			botUsers.RemoveAt(Random.Shared.Next(botUsers.Count));
+			return userId;
+		}
+
+		return GetRandomBotUserId(botUsers, item.CurrentHighestBidUserId);
+	}
+
+
+	/// <summary>
+	///     引数の配列からランダムにBOTユーザーを選定（除外指定可能）
+	/// </summary>
+	/// <param name="botUsers">BOTユーザーリスト</param>
+	/// <param name="excludeUserId">除外ID</param>
+	/// <returns></returns>
+	private static int GetRandomBotUserId(List<int> botUsers, int? excludeUserId) {
+		var filtered = botUsers.Where(id => id != excludeUserId).ToArray();
+		return filtered[Random.Shared.Next(filtered.Length)];
+	}
+
 
 	/// <summary>
 	///     終了処理
