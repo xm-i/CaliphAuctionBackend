@@ -40,9 +40,9 @@
 
 | 名前                    | リンク                                                      | 役割 / 概要                       |
 | ----------------------- | ----------------------------------------------------------- | --------------------------------- |
-| Frontend (本リポジトリ) | https://github.com/southernwind/CaliphAuctionFront          | SPA / Vue3 / SignalR クライアント |
-| Backend                 | https://github.com/southernwind/CaliphAuctionBackend        | REST API / 入札 BOT / SignalR Hub |
-| Infrastructure          | https://github.com/southernwind/CaliphAuctionInfrastructure | IaC / CI/CD / 環境構築スクリプト  |
+| Frontend (本リポジトリ) | https://github.com/xm-i/CaliphAuctionFront          | SPA / Vue3 / SignalR クライアント |
+| Backend                 | https://github.com/xm-i/CaliphAuctionBackend        | REST API / 入札 BOT / SignalR Hub |
+| Infrastructure          | https://github.com/xm-i/CaliphAuctionInfrastructure | IaC / CI/CD / 環境構築スクリプト  |
 
 ## プロジェクト構成 (抜粋)
 
