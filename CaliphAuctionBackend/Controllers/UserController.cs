@@ -11,14 +11,30 @@ namespace CaliphAuctionBackend.Controllers;
 public class UserController(IUserService userService) : ControllerBase {
 	private readonly IUserService _userService = userService;
 
-	[HttpPost("register")]
+	[HttpPost("pre-register")]
 	[AllowAnonymous]
+	public async Task<ActionResult<PreRegisterResultDto>> PreRegisterAsync([FromBody] PreRegisterUserDto preRegisterUserDto) {
+		if (!this.ModelState.IsValid) {
+			return this.BadRequest(this.ModelState);
+		}
+
+		var result = await this._userService.PreRegisterAsync(preRegisterUserDto);
+		return this.Ok(result);
+	}
+
+	[HttpPost("register")]
+	[Authorize]
 	public async Task<ActionResult> RegisterAsync([FromBody] RegisterUserDto registerUserDto) {
 		if (!this.ModelState.IsValid) {
 			return this.BadRequest(this.ModelState);
 		}
 
-		await this._userService.RegisterAsync(registerUserDto);
+		var userIdStr = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
+		if (!int.TryParse(userIdStr, out var userId)) {
+			return this.Unauthorized();
+		}
+
+		await this._userService.RegisterAsync(registerUserDto, userId);
 		return this.Ok();
 	}
 

@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using CaliphAuctionBackend.Data;
 using CaliphAuctionBackend.Dtos.User;
 using CaliphAuctionBackend.Exceptions;
@@ -20,33 +21,33 @@ namespace CaliphAuctionBackend.Services.Implementations {
 		}
 
 		/// <summary>
-		///     新しいユーザーを登録する
+		///     ユーザー名のみで仮登録を行い、ログイン用の仮パスワードを返す
 		/// </summary>
-		/// <param name="registerUserDto">登録するユーザー情報が入った DTO</param>
-		/// <returns>処理完了の Task</returns>
-		public async Task RegisterAsync(RegisterUserDto registerUserDto) {
+		public async Task<PreRegisterResultDto> PreRegisterAsync(PreRegisterUserDto preRegisterUserDto) {
 			await using var transaction = await this._dbContext.Database.BeginTransactionAsync();
 
-			await this.ValidateAsync(registerUserDto);
+			await this.ValidateUsernameAsync(preRegisterUserDto.Username);
 
+			var temporaryPassword = this.GenerateTemporaryPassword();
 			var salt = SecurityUtils.GenerateSalt();
-			var hashedPassword = SecurityUtils.HashPassword(registerUserDto.Password, salt, this.Pepper);
+			var hashedPassword = SecurityUtils.HashPassword(temporaryPassword, salt, this.Pepper);
 			var nullableRegistrationBonusPoints = this._configuration.GetValue<int?>("Points:RegistrationBonus");
 			if (nullableRegistrationBonusPoints is not { } registrationBonusPoints) {
 				throw new ConfigurationCaliphException("Registration bonus points configuration is missing.");
 			}
 
 			var user = new User {
-				Email = registerUserDto.Email,
+				Email = this.GenerateTemporaryEmail(),
 				PasswordSalt = salt,
 				PasswordHash = hashedPassword,
-				Username = registerUserDto.Username,
+				Username = preRegisterUserDto.Username,
 				CreatedAt = DateTime.UtcNow,
 				EmailConfirmed = false,
 				LastFailedLoginAt = null,
 				FailedLoginCount = 0,
 				IsDeleted = false,
 				IsBotUser = false,
+				IsPreRegistered = true,
 				PointBalance = registrationBonusPoints
 			};
 
@@ -82,10 +83,47 @@ namespace CaliphAuctionBackend.Services.Implementations {
 
 			await this._dbContext.SaveChangesAsync();
 			await transaction.CommitAsync();
+
+			return new PreRegisterResultDto {
+				UserId = user.Id,
+				Password = temporaryPassword
+			};
 		}
 
 		/// <summary>
-		///     指定されたメールアドレスとパスワードでログインし、認証に成功した場合、JWTトークンとユーザー情報を返す
+		///     仮登録済みユーザーの情報を更新して本登録を完了する（メールアドレスとパスワードのみ更新）
+		/// </summary>
+		/// <param name="registerUserDto">更新するユーザー情報が入った DTO</param>
+		/// <param name="userId">JWTトークンから取得したユーザーID</param>
+		/// <returns>処理完了の Task</returns>
+		public async Task RegisterAsync(RegisterUserDto registerUserDto, int userId) {
+			await using var transaction = await this._dbContext.Database.BeginTransactionAsync();
+
+			var user = await this._dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted);
+			if (user is null) {
+				throw new ValidationCaliphException("User not found.");
+			}
+
+			if (!user.IsPreRegistered) {
+				throw new ValidationCaliphException("User is already registered.");
+			}
+
+			await this.ValidateEmailAsync(registerUserDto.Email, user.Id);
+
+			var salt = SecurityUtils.GenerateSalt();
+			var hashedPassword = SecurityUtils.HashPassword(registerUserDto.Password, salt, this.Pepper);
+
+			user.Email = registerUserDto.Email;
+			user.PasswordSalt = salt;
+			user.PasswordHash = hashedPassword;
+			user.IsPreRegistered = false;
+
+			await this._dbContext.SaveChangesAsync();
+			await transaction.CommitAsync();
+		}
+
+		/// <summary>
+		///     指定されたメールアドレス or ユーザーID とパスワードでログインし、認証に成功した場合、JWTトークンとユーザー情報を返す
 		/// </summary>
 		/// <param name="loginDto">ログイン情報を含むDTO</param>
 		/// <param name="ipAddress">ログイン試行を行っているクライアントのIPアドレス</param>
@@ -99,9 +137,16 @@ namespace CaliphAuctionBackend.Services.Implementations {
 				throw new IpBlockedCaliphException("Too many failed login attempts from this IP.");
 			}
 
-			var user = await this._dbContext.Users.FirstOrDefaultAsync(u => u.Email == loginDto.Email && !u.IsDeleted);
+			User? user;
+			if (loginDto.UserId.HasValue) {
+				user = await this._dbContext.Users.FirstOrDefaultAsync(u => u.Id == loginDto.UserId.Value && !u.IsDeleted);
+			} else {
+				var email = loginDto.Email ?? string.Empty;
+				user = await this._dbContext.Users.FirstOrDefaultAsync(u => u.Email == email && !u.IsDeleted);
+			}
+
 			if (user is null) {
-				throw new AuthenticationFailedCaliphException("Invalid email or password.");
+				throw new AuthenticationFailedCaliphException("Invalid userId/email or password.");
 			}
 
 			if (user.LastFailedLoginAt is not null && user.LastFailedLoginAt < oneHourAgo) {
@@ -116,7 +161,7 @@ namespace CaliphAuctionBackend.Services.Implementations {
 				var hashedInput = SecurityUtils.HashPassword(loginDto.Password, user.PasswordSalt, this.Pepper);
 
 				if (hashedInput != user.PasswordHash) {
-					throw new AuthenticationFailedCaliphException("Invalid email or password.");
+					throw new AuthenticationFailedCaliphException("Invalid userId/email or password.");
 				}
 
 				var jwtKey = this._configuration["Jwt:Key"];
@@ -137,12 +182,15 @@ namespace CaliphAuctionBackend.Services.Implementations {
 				user.LastLoginAt = DateTime.UtcNow;
 				user.FailedLoginCount = 0;
 
-				var result = new LoginResultDto { AccessToken = token, User = new() { Id = user.Id, Email = user.Email, Username = user.Username } };
+				var result = new LoginResultDto { AccessToken = token, User = new() { Id = user.Id, Email = user.Email, Username = user.Username, IsPreRegistered = user.IsPreRegistered } };
 				return result;
 			} catch (CaliphException) {
 				user.FailedLoginCount++;
 				user.LastFailedLoginAt = DateTime.UtcNow;
-				this._dbContext.FailedLoginAttempts.Add(new() { Email = loginDto.Email, IpAddress = ipAddress, AttemptedAt = DateTime.UtcNow });
+				var attemptedIdentifier = !string.IsNullOrWhiteSpace(loginDto.Email)
+					? loginDto.Email
+					: $"user:{loginDto.UserId}";
+				this._dbContext.FailedLoginAttempts.Add(new() { Email = attemptedIdentifier!, IpAddress = ipAddress, AttemptedAt = DateTime.UtcNow });
 				throw;
 			} finally {
 				await this._dbContext.SaveChangesAsync();
@@ -152,17 +200,32 @@ namespace CaliphAuctionBackend.Services.Implementations {
 
 		public async Task<UserSummaryDto?> GetByIdAsync(int userId) {
 			var user = await this._dbContext.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted);
-			return user == null ? null : new UserSummaryDto { Id = user.Id, Email = user.Email, Username = user.Username };
+			return user == null ? null : new UserSummaryDto { Id = user.Id, Email = user.Email, Username = user.Username, IsPreRegistered = user.IsPreRegistered };
 		}
 
-		private async Task ValidateAsync(RegisterUserDto request) {
-			if (await this._dbContext.Users.AnyAsync(u => u.Email == request.Email)) {
-				throw new ValidationCaliphException("Email already exists.");
-			}
-
-			if (await this._dbContext.Users.AnyAsync(u => u.Username == request.Username)) {
+		private async Task ValidateUsernameAsync(string username) {
+			if (await this._dbContext.Users.AnyAsync(u => u.Username == username)) {
 				throw new ValidationCaliphException("Username already exists.");
 			}
+		}
+
+		private async Task ValidateEmailAsync(string email, int currentUserId) {
+			if (await this._dbContext.Users.AnyAsync(u => u.Id != currentUserId && u.Email == email)) {
+				throw new ValidationCaliphException("Email already exists.");
+			}
+		}
+
+		private string GenerateTemporaryEmail() {
+			return $"{Guid.NewGuid():N}@temp.local";
+		}
+
+		private string GenerateTemporaryPassword(int length = 12) {
+			const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
+			var buffer = new char[length];
+			for (var i = 0; i < length; i++) {
+				buffer[i] = chars[RandomNumberGenerator.GetInt32(chars.Length)];
+			}
+			return new string(buffer);
 		}
 	}
 }

@@ -27,4 +27,9 @@ public class UserSummaryDto {
 		get;
 		set;
 	}
+
+	public required bool IsPreRegistered{
+		get;
+		set;
+	}
 }

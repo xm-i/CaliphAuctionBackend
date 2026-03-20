@@ -70,6 +70,11 @@ public class User : BaseEntity {
 		set;
 	}
 
+	public bool IsPreRegistered {
+		get;
+		set;
+	}
+
 	/// <summary>冗長: 現在のポイント残高。破損時は取引履歴から再計算可</summary>
 	public int PointBalance {
 		get;
