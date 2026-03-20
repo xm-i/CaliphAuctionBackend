@@ -24,7 +24,6 @@ jobs:
         with:
           dotnet-version: ${{ matrix.dotnet }}
           include-prerelease: true
-          cache: true
 
       - name: Restore
         run: dotnet restore
@@ -46,9 +45,8 @@ jobs:
         with:
             dotnet-version: '10.0.x'
             include-prerelease: true
-            cache: true
 
-      - name: Create appsettings.Production.json from Secrets/Env
+      - name: Create appsettings.json from Secrets/Env
         env:
           CORS_ALLOWED_ORIGINS: ${{ vars.CORS_ALLOWED_ORIGINS }}
           DB_CONNECTION: ${{ secrets.DB_CONNECTION }}
@@ -64,7 +62,7 @@ jobs:
           IFS=',' read -ra ORIGINS_ARR <<< "$CORS_ALLOWED_ORIGINS"
           ORIGINS_JSON=$(printf '"%s",' "${ORIGINS_ARR[@]}"); ORIGINS_JSON="[${ORIGINS_JSON%,}]"
 
-          cat > CaliphAuctionBackend/appsettings.Production.json <<EOF
+          cat > CaliphAuctionBackend/appsettings.json <<EOF
           {
             "Logging": {
               "LogLevel": {
@@ -76,13 +74,13 @@ jobs:
             },
             "AllowedHosts": "*",
             "Cors": { "AllowedOrigins": $ORIGINS_JSON },
-            "ConnectionStrings": { "DefaultConnection": "${DB_CONNECTION//"/\"}" },
-            "Jwt": { "Key": "${JWT_KEY//"/\"}", "Issuer": "CaliphAuctionBackend", "ExpireMinutes": 14400 },
-            "ExternalPaymentJwt": { "Key": "${EXTERNAL_JWT_KEY//"/\"}", "Issuer": "ExternalPaymentService", "ExpireMinutes": 5 },
+            "ConnectionStrings": { "DefaultConnection": "${DB_CONNECTION}" },
+            "Jwt": { "Key": "${JWT_KEY}", "Issuer": "CaliphAuctionBackend", "ExpireMinutes": 14400 },
+            "ExternalPaymentJwt": { "Key": "${EXTERNAL_JWT_KEY}", "Issuer": "ExternalPaymentService", "ExpireMinutes": 5 },
             "Points": { "RegistrationBonus": 5000 },
             "Auction": { "MinimumEndTimeSeconds": 30, "ActiveTargetCount": 50, "TopUpIntervalSeconds": 30 },
             "AutoBid": { "DiscoveryIntervalSeconds": 10 },
-            "Security": { "PasswordPepper": "${PASSWORD_PEPPER//"/\"}" }
+            "Security": { "PasswordPepper": "${PASSWORD_PEPPER}" }
           }
           EOF
 
@@ -105,9 +103,9 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     env:
-      DEPLOY_USER: ubuntu
+      DEPLOY_USER: deploy
       DEPLOY_HOST: caliphauction.com
-      DEPLOY_PATH: /opt/caliph-auction
+      DEPLOY_PATH: /opt/caliph-auction/backend
       DEPLOY_PORT: 30532
     steps:
       - name: Download artifact
@@ -127,12 +125,12 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           printf "Host target\n  HostName %s\n  User %s\n  Port %s\n  StrictHostKeyChecking accept-new\n" "$DEPLOY_HOST" "$DEPLOY_USER" "$DEPLOY_PORT" >> ~/.ssh/config
 
-      - name: Upload & Deploy
+      - name: Upload & Deploy & Restart Service
         run: |
           set -euo pipefail
           ls -l dist
           scp -P "$DEPLOY_PORT" dist/app.tar.gz target:/tmp/app.tar.gz
-          ssh target "sudo mkdir -p $DEPLOY_PATH/releases && ts=\$(date +%Y%m%d%H%M%S) && mkdir $DEPLOY_PATH/releases/\$ts && tar -xzf /tmp/app.tar.gz -C $DEPLOY_PATH/releases/\$ts && ln -sfn $DEPLOY_PATH/releases/\$ts $DEPLOY_PATH/current && rm /tmp/app.tar.gz"
+          ssh target "sudo mkdir -p $DEPLOY_PATH && sudo tar -xzf /tmp/app.tar.gz -C $DEPLOY_PATH && sudo rm /tmp/app.tar.gz &&  sudo systemctl restart caliph-backend.service"
 
 # Required secrets: DB_CONNECTION, JWT_KEY, EXTERNAL_JWT_KEY, SSH_KEY
 # GitHub Environment variable: CORS_ALLOWED_ORIGINS
